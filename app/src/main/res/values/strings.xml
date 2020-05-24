@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MograTatakiGame</string>
+    <string name="score">Score:</string>
+    <string name="HiScore">HiScore:</string>
+    <string name="Time">Time:</string>
+    <string name="Start">Start!</string>
+    <string name="zero">0</string>
+    <string name="GameStop">GameStop</string>
+    <string name="AnimUp">ANIMATION UP</string>
+    <string name="AnimDn">ANIMATION DN</string>
+    <string name="ResetFl">FLAG RESET</string>
+</resources>
