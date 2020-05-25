@@ -1,5 +1,8 @@
 package com.example.mogratatakigame;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -10,7 +13,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,26 +41,29 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     private boolean updateHighScore,mogAttack,moveOKMog;
     private boolean ngMog,lastTimeMog,endGame,stopMog,mogContinue,firstGame,endOKMog,startOKMog,tutorialOn;
-    private boolean birdTap,flyingBird,swipeHum;
+    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd;
     private boolean[] recordHiyoko = {false, false, false, false, false, false, false, false, false};
     private boolean[] spawnHum     = {false, false, false, false, false, false, false, false, false};
+    private String bou = "| ";
     private double startSystemTime, nowSystemTime,countdownTime,nowGameTime,setTime,swipeStartTime,swipeEndTime;
     private float upPointMog,centerPointMog,underPointMog,left1PointMog,left2PointMog,fromXBird,toXBird,screenDensity;
     private float startTouchX,startTouchY;
     private int intScore, timeCount, sharedHighScore,recordScore,hiyokoCount,playCount,
             upMograNum,nowMograNum,upHiyokoNum,nowHiyokoNum,mograHeight,mograCountNum,clearMog,
-            mograCountint,birdTopPoint,nowStage;
+            mograCountint,birdTopPoint,nowStage,tapCount,nextClearScore;
     private int[] upTime        = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     private int[] beforeUpTime  = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+    private int[] clearScore    = {250,230,270,300};
 //    private int[] gameMograTime,gameHiyokoTime;
     private TextView scoreTxt,nokoriTime, highScoreTxt,sumMogra,sumHiyoko,hiyokoCountint
             ,highScoreTime,endMsg,endTxt,endScore,updateHighScoreTxt,nowStageTxt,nowStageInt
-            ,nowCondiNum,condiNum,clearTxt,discript,tutorialText,tutorialCheckText,stageTxt,stageInt,touchPleaseTxt;
-    private ImageView happyIcon,flyBird,discriptionImage,discriptionImage2,dotImg;
+            ,nowCondiNum,condiNum,clearTxt,discript,discript2,tutorialText,tutorialText2
+            ,tutorialCheckText,stageTxt,stageInt,touchPleaseTxt,clearText;
+    private ImageView happyIcon,flyBird,discriptionImage,discriptionImage2,dotImg,dotImg2;
     private Handler timerHandler;
     private Handler[] DnHd,humHd;
-    private RelativeLayout resultLayout;
-    private TranslateAnimation birdMove;
+    private RelativeLayout resultLayout,animLayout;
+    private TranslateAnimation birdMove,textMove;
     private Timer gameTimer;
     private DecimalFormat timeFormat;
     private Calendar highScoreDate;
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private PointTestCanvas pointTestCanvas;
     private TouchCanvas touchCanvas;
     private CheckBox checkBox;
+    private AnimatorSet gameEndAnim,endAlphaAnim;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint({"ResourceType", "ClickableViewAccessibility"})
@@ -83,13 +89,14 @@ public class MainActivity extends AppCompatActivity {
         //setContentView(R.layout.activity_main);
 
         //縦画面固定(横の場合ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 
         int bRed,bGreen,bBlue;
         bRed   = 173;
         bGreen = 179;
         bBlue  = 255;
         int backgroundColor = Color.rgb(bRed, bGreen, bBlue);
+        birdTopPoint = 200;
 
         //部品初期化
         final RelativeLayout relativeLayout = new RelativeLayout(this);
@@ -125,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
 
         DisplayMetrics mogDisplayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(mogDisplayMetrics);
-        int windowHeight    = mogDisplayMetrics.heightPixels;
+        final int windowHeight    = mogDisplayMetrics.heightPixels;
         int windowWidth     = mogDisplayMetrics.widthPixels;
 
         timerHandler    = new Handler();
@@ -260,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         birdTopPoint    = 350;
 
         nowStage        = 0;
+        tapCount        = 0;
 
         //startGame       = false;
         endGame         = true;
@@ -276,6 +284,11 @@ public class MainActivity extends AppCompatActivity {
         endOKMog        = false;
         startOKMog      = true;
         tutorialOn      = true;
+        startGame       = false;
+        gameRetry       = false;
+        resulting       = false;
+        endingNow       = false;
+        onceEnd         = true;
 
         //
         // スコアパーツ部分
@@ -451,13 +464,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        RelativeLayout.LayoutParams stopBtnParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 200);
-        stopBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM, 12);
-        stopBtnParam.addRule(RelativeLayout.ALIGN_PARENT_LEFT,   9);
+        RelativeLayout.LayoutParams stopBtnParam = new RelativeLayout.LayoutParams(windowWidth / 2, 250);
+        stopBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        stopBtnParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
         stopGameBtn = new Button(this);
         String stpBtnTxt = "中断";
         stopGameBtn.setText(stpBtnTxt);
+        stopGameBtn.setTextSize(30);
         stopGameBtn.setLayoutParams(stopBtnParam);
         stopGameBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -472,8 +486,8 @@ public class MainActivity extends AppCompatActivity {
         stopGameBtn.setEnabled(false);
 
         RelativeLayout.LayoutParams resetBtnParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        resetBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,    12);
-        resetBtnParam.addRule(RelativeLayout.ALIGN_PARENT_RIGHT,      9);
+        resetBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        resetBtnParam.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
         resetScoreBtn = new Button(this);
         String resetScoreBtnTxt = "ハイスコアリセット";
@@ -545,6 +559,7 @@ public class MainActivity extends AppCompatActivity {
         relativeLayout.addView(condiSlash);
         relativeLayout.addView(condiNum);
         relativeLayout.addView(clearTxt);
+        relativeLayout.addView(stopGameBtn);
         //見た目 - モグラ
         relativeLayout.addView(mogUpDnCanvas[0]);
         relativeLayout.addView(mogUpDnCanvas[1]);
@@ -583,9 +598,9 @@ public class MainActivity extends AppCompatActivity {
         //新記録の場合
         relativeLayout.addView(happyIcon);
         //ボタン
-        relativeLayout.addView(startMogGameBtn);
-        relativeLayout.addView(stopGameBtn);
-        relativeLayout.addView(resetScoreBtn);
+//        relativeLayout.addView(startMogGameBtn);
+//        relativeLayout.addView(stopGameBtn);
+//        relativeLayout.addView(resetScoreBtn);
 
         //確認用
 //        relativeLayout.addView(pointTestCanvas);
@@ -601,37 +616,46 @@ public class MainActivity extends AppCompatActivity {
         resultLayout.setAlpha(0.0f);
 
         int whiteColor = Color.WHITE;
+        //チュートリアル位置
+        int tutMarginTop = 600;
+        int tutMarginTop2 = tutMarginTop + 200;
+        int tutMarginLeft = 150;
+        int tutMarginLeft2 = tutMarginLeft + 250;
+        int tutMarginLeft3 = tutMarginLeft2 + 300;
 
         stageTxt              = new TextView(this);
         stageInt              = new TextView(this);
         endMsg                = new TextView(this);
         endTxt                = new TextView(this);
         endScore              = new TextView(this);
-        updateHighScoreTxt    = new TextView(this);
         discript              = new TextView(this);
+        discript2             = new TextView(this);
         tutorialText          = new TextView(this);
+        tutorialText2         = new TextView(this);
         tutorialCheckText     = new TextView(this);
         touchPleaseTxt        = new TextView(this);
 
-        stageTxt.setText("ステージ");
+        stageTxt.setText("ステージ1");
         stageInt.setText("0");
         endMsg.setText("GAME OVER");
-        endTxt.setText("Score:");
+//        endTxt.setText(String.valueOf(clearMog) + "点以上");
         endScore.setText("0");
-        updateHighScoreTxt.setText("ハイスコア更新！");
-        discript.setText("達成で次のステージへ！");
-        tutorialText.setText("タップしよう！");
+        discript.setText(clearMog + "点以上で");
+        discript2.setText("次ステージ！");
+        tutorialText.setText("タップしよう！！");
+        tutorialText2.setText("を");
         tutorialCheckText.setText("チュートリアルを表示しない");
         touchPleaseTxt.setText("画面をタップしてスタート！");
 
         stageTxt.setTextSize(60);
         stageInt.setTextSize(60);
-        endMsg.setTextSize(30);
+        endMsg.setTextSize(50);
         endTxt.setTextSize(50);
-        endScore.setTextSize(50);
-        updateHighScoreTxt.setTextSize(30);
-        discript.setTextSize(25);
+        endScore.setTextSize(30);
+        discript.setTextSize(50);
+        discript2.setTextSize(40);
         tutorialText.setTextSize(35);
+        tutorialText2.setTextSize(35);
         tutorialCheckText.setTextSize(20);
         touchPleaseTxt.setTextSize(30);
 
@@ -640,146 +664,252 @@ public class MainActivity extends AppCompatActivity {
         endMsg.setTextColor(whiteColor);
         endTxt.setTextColor(whiteColor);
         endScore.setTextColor(whiteColor);
-        updateHighScoreTxt.setTextColor(whiteColor);
-        discript.setTextColor(whiteColor);
+        discript.setTextColor(Color.YELLOW);
+        discript2.setTextColor(whiteColor);
         tutorialText.setTextColor(whiteColor);
+        tutorialText2.setTextColor(whiteColor);
         tutorialCheckText.setTextColor(whiteColor);
         touchPleaseTxt.setTextColor(whiteColor);
 
         RelativeLayout.LayoutParams stageTxtParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams stageIntParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        RelativeLayout.LayoutParams endMsgParam             = new RelativeLayout.LayoutParams(1200,200);
-        RelativeLayout.LayoutParams endTxtParam             = new RelativeLayout.LayoutParams(500,200);
-        RelativeLayout.LayoutParams endScoreParam           = new RelativeLayout.LayoutParams(500,200);
-        RelativeLayout.LayoutParams updateHighScoreTxtParam = new RelativeLayout.LayoutParams(900,200);
-        RelativeLayout.LayoutParams discriptParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,200);
+        RelativeLayout.LayoutParams endMsgParam             = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams endTxtParam             = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams endScoreParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams discriptParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams discript2Param          = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams tutorialParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams tutorialParam2          = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams checkTxtParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        stageTxtParam.setMargins            (130,180,0,0);
+        stageTxtParam.setMargins            (130,100,0,0);
         stageIntParam.setMargins            (center + 240,180,0,0);
         endMsgParam.setMargins              (0,700, 0, 0);
-        endTxtParam.setMargins              (paramPoint - 100, 820 - 20,0, 0);
-        endScoreParam.setMargins            (center + 30, 820 - 20, 0, 0);
-        updateHighScoreTxtParam.setMargins  (400 - 100, 1070 - 20, 0, 0);
-        discriptParam.setMargins            (0, 1070 - 20, 0, 0);
-        tutorialParam.setMargins            (350,400,0,0);
+        endTxtParam.setMargins              (paramPoint - 100, 780,0, 0);
+        endScoreParam.setMargins            (center + 30, 780, 0, 0);
+        discriptParam.setMargins            (0, 1050, 0, 0);
+        discript2Param.setMargins           (0, 1200, 0, 0);
+        tutorialParam.setMargins            (tutMarginLeft,tutMarginTop2,0,0);
+        tutorialParam2.setMargins           (tutMarginLeft3,tutMarginTop + 50,0,0);
         checkTxtParam.setMargins            (100,1400,0,0);
 
         endMsgParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
         discriptParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        discript2Param.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        tutorialParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
         stageTxt.setLayoutParams(stageTxtParam);
         stageInt.setLayoutParams(stageIntParam);
         endMsg.setLayoutParams(endMsgParam);
         endTxt.setLayoutParams(endTxtParam);
         endScore.setLayoutParams(endScoreParam);
-        updateHighScoreTxt.setLayoutParams(updateHighScoreTxtParam);
         discript.setLayoutParams(discriptParam);
+        discript2.setLayoutParams(discript2Param);
         tutorialText.setLayoutParams(tutorialParam);
+        tutorialText2.setLayoutParams(tutorialParam2);
         tutorialCheckText.setLayoutParams(checkTxtParam);
-
-        endMsg.setGravity(Gravity.CENTER_HORIZONTAL);
 
         //ImageView
         RelativeLayout.LayoutParams dotParam = new RelativeLayout.LayoutParams(210,210);
-        dotParam.setMargins(150,350,0,0);
+        dotParam.setMargins(tutMarginLeft,tutMarginTop,0,0);
         dotImg = new ImageView(this);
         dotImg.setImageResource(R.drawable.dot);
         dotImg.setLayoutParams(dotParam);
         dotImg.setAlpha(1.0f);
 
+        RelativeLayout.LayoutParams dotParam2 = new RelativeLayout.LayoutParams(210,210);
+        dotParam2.setMargins(tutMarginLeft2,tutMarginTop,0,0);
+        dotImg2 = new ImageView(this);
+        dotImg2.setImageResource(R.drawable.dot);
+        dotImg2.setLayoutParams(dotParam2);
+        dotImg2.setAlpha(1.0f);
+
         RelativeLayout.LayoutParams imageViewParam = new RelativeLayout.LayoutParams(200,200);
-        imageViewParam.setMargins(150,350,0,0);
+        imageViewParam.setMargins(tutMarginLeft,tutMarginTop,0,0);
         discriptionImage   = new ImageView(this);
         discriptionImage.setImageResource(drawableMap.get("mogra"));
         discriptionImage.setLayoutParams(imageViewParam);
         discriptionImage.setAlpha(1.0f);
 
-        //CheckBox
-        RelativeLayout.LayoutParams checkParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        checkParam.setMargins(10, 1400,0,0);
-        checkBox        = new CheckBox(this);
-        checkBox.setLayoutParams(checkParam);
+        RelativeLayout.LayoutParams imageViewParam2 = new RelativeLayout.LayoutParams(200,200);
+        imageViewParam2.setMargins(tutMarginLeft2,tutMarginTop,0,0);
+        discriptionImage2   = new ImageView(this);
+        discriptionImage2.setImageResource(drawableMap.get("mogra"));
+        discriptionImage2.setLayoutParams(imageViewParam2);
+        discriptionImage2.setAlpha(0.0f);
 
         //Resultボタン
         backTopBtn   = new Button(this);
         nextStageBtn = new Button(this);
         backTopBtn.setText("やめる");
-        nextStageBtn.setText("Debug");
+        nextStageBtn.setText("次ステージへ");
 
         int buttonHeight = 250;
-        int buttonWidth  = 350;
+        int buttonWidth  = windowWidth / 2;
         RelativeLayout.LayoutParams backTopBtnParam = new RelativeLayout.LayoutParams(buttonWidth, buttonHeight);
         RelativeLayout.LayoutParams nextStageBtnParam = new RelativeLayout.LayoutParams(buttonWidth, buttonHeight);
 
-        //backTopBtnParam.setMargins(400 - 300,1000 ,0 ,0);
-        nextStageBtnParam.setMargins(400 + 100,1000 ,0 ,0);
+//        backTopBtnParam.setMargins(0,1000 ,0 ,0);
+//        nextStageBtnParam.setMargins(0,1000 ,0 ,0);
 
-        backTopBtnParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
         backTopBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        backTopBtnParam.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        nextStageBtnParam.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+        nextStageBtnParam.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
         backTopBtn.setLayoutParams(backTopBtnParam);
         backTopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                gameTimer.cancel();
+                startGame = false;
                 endOKMog = false;
                 mogContinue = false;
                 firstGame = true;
-                mogNumAdmin.stage = 1;
+                onceEnd   = true;
+                stageTxt.setText("ステージ1");
                 resultLayout.setAlpha(0.0f);
-                startMogGameBtn.setEnabled(true);
-                resetScoreBtn.setEnabled(true);
-                nextStageBtn.setEnabled(false);
+                nextStageBtn.setText("ゲーム開始");
+                nextStageBtn.setEnabled(true);
+                backTopBtn.setEnabled(false);
                 initZeroTextView();
+                resultLayout.setAlpha(1.0f);
+                animLayout.setAlpha(0.0f);
+                mogNumAdmin.stage = 1;
+                setTutorialImage(1);
             }
         });
+
         nextStageBtn.setLayoutParams(nextStageBtnParam);
-        nextStageBtn.setEnabled(false);
+        nextStageBtn.setEnabled(true);
         nextStageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                float[][] testLine = new float[10][];
-                testLine[0] = new float[]{left1PointMog,0,left1PointMog,1600};
-                testLine[1] = new float[]{left2PointMog,0,left2PointMog,1600};
-                testLine[2] = new float[]{0,upPointMog + mograHeight,1000,upPointMog + mograHeight};
-                testLine[3] = new float[]{0,centerPointMog + mograHeight,1000,centerPointMog + mograHeight};
-                testLine[4] = new float[]{0,underPointMog,1000,underPointMog};
-                pointTestCanvas.addLineInfo(testLine,5);
-                /*
-                        upPointMog      = 550.0f + 100.0f;
-        centerPointMog  = 880.0f + 100.0f;
-        underPointMog   = 1400.0f + 100.0f;
-
-                 */
+                onceEnd = true;
+                if(endGame && startGame){
+                    //ゲームスタート
+                    gameTimer.cancel();
+                    startGame = true;
+                    firstGame = true;
+                    gameStart();
+                }else if(gameRetry){
+                    //もう一度
+                    gameTimer.cancel();
+                    gameRetry = false;
+                    gameStart();
+                }else{
+                    //次のステージ
+                    gameTimer.cancel();
+                    gameStart();
+                }
             }
         });
 
+//描画メモ
+//                float[][] testLine = new float[10][];
+//                testLine[0] = new float[]{left1PointMog,0,left1PointMog,1600};
+//                testLine[1] = new float[]{left2PointMog,0,left2PointMog,1600};
+//                testLine[2] = new float[]{0,upPointMog + mograHeight,1000,upPointMog + mograHeight};
+//                testLine[3] = new float[]{0,centerPointMog + mograHeight,1000,centerPointMog + mograHeight};
+//                testLine[4] = new float[]{0,underPointMog,1000,underPointMog};
+//                pointTestCanvas.addLineInfo(testLine,5);
+
         resultLayout.addView(stageTxt);
-        resultLayout.addView(stageInt);
+//        resultLayout.addView(stageInt);
         resultLayout.addView(endMsg);
-        resultLayout.addView(endTxt);
-        resultLayout.addView(endScore);
-        resultLayout.addView(updateHighScoreTxt);
+//        resultLayout.addView(endTxt);
+//        resultLayout.addView(endScore);
+//        resultLayout.addView(updateHighScoreTxt);
         resultLayout.addView(discript);
+        resultLayout.addView(discript2);
         resultLayout.addView(dotImg);
         resultLayout.addView(discriptionImage);
         resultLayout.addView(tutorialText);
-        resultLayout.addView(checkBox);
-        resultLayout.addView(tutorialCheckText);
-
+        resultLayout.addView(dotImg2);
+        resultLayout.addView(discriptionImage2);
+        resultLayout.addView(tutorialText2);
         resultLayout.addView(backTopBtn);
+        resultLayout.addView(nextStageBtn);
+//        resultLayout.addView(checkBox);
+//        resultLayout.addView(tutorialCheckText);
+
+//        resultLayout.addView(backTopBtn);
 //        resultLayout.addView(nextStageBtn);
 
         relativeLayout.addView(resultLayout);
 
+        animLayout = new RelativeLayout(this);
+        animLayout.setBackgroundColor(Color.argb(150, 0, 0, 0));
+        clearText  = new TextView(this);
+        updateHighScoreTxt    = new TextView(this);
+        RelativeLayout.LayoutParams updateHighScoreTxtParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams clearParam = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.MATCH_PARENT);
+        clearParam.setMargins(0,100,0,0);
+        updateHighScoreTxtParam.setMargins  (0,0, 0, 0);
+        clearParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        clearText.setLayoutParams(clearParam);
+        clearText.setText(bou + "クリアー");
+        clearText.setTextSize(50);
+        clearText.setTextColor(whiteColor);
+        updateHighScoreTxt.setLayoutParams(updateHighScoreTxtParam);
+        updateHighScoreTxt.setText(bou + "ハイスコア更新！");
+        updateHighScoreTxt.setTextSize(50);
+        updateHighScoreTxt.setTextColor(whiteColor);
+        animLayout.addView(clearText);
+//        animLayout.addView(updateHighScoreTxt);
+        animLayout.setAlpha(0.0f);
+
+        relativeLayout.addView(animLayout);
+
         setContentView(relativeLayout);
+
+        resultLayout.setAlpha(1.0f);
+        backTopBtn.setEnabled(false);
+        nextStageBtn.setText("ゲーム開始");
+        endMsg.setText("");
+        updateHighScoreTxt.setText("");
+        backTopBtn.setTextSize(30);
+        nextStageBtn.setTextSize(30);
 
         attackFlagAllOff();
         mogAllDown();
+        mogNumAdmin.stage = 1;
+        setTutorialImage(mogNumAdmin.stage);
         //mogAllUp();
 
         //attackFlagAllOn();
+
+        ObjectAnimator downAnim = ObjectAnimator.ofFloat(clearText,"translationY",-100,windowHeight / 3);
+        downAnim.setDuration(1500);
+        ObjectAnimator downHighAnim = ObjectAnimator.ofFloat(updateHighScoreTxt,"translationY",0,windowHeight / 3 + 100);
+        downAnim.setDuration(1500);
+        ObjectAnimator alphaAnim = ObjectAnimator.ofFloat(clearText,"alpha",0.0f,1.0f);
+        alphaAnim.setDuration(1500);
+        ObjectAnimator alphaHighAnim = ObjectAnimator.ofFloat(updateHighScoreTxt,"alpha",0.0f,1.0f);
+        alphaAnim.setDuration(1500);
+        gameEndAnim = new AnimatorSet();
+        gameEndAnim.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                resulting = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+        gameEndAnim.play(downAnim).with(downHighAnim).with(alphaAnim).with(alphaHighAnim);;
 
         /*
         //座標の計算が終了後に値を取得する
@@ -787,10 +917,7 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onGlobalLayout() {
-                showMsgCanvas1.setMsgPoint(mogLef,mogTop);
-                showMsgCanvas2.setMsgPoint(mog2Lef,mog2Top);
 
-                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
             }
         });
          */
@@ -804,6 +931,12 @@ public class MainActivity extends AppCompatActivity {
         nowCondiNum.setText(String.format("%03d", 0));
         condiNum.setText(String.format("%03d", 0));
         happyIconAnim();
+    }
+
+    private void resetUpDn(){
+        for(int i = 0; i < mogUpDnCanvas.length ; i++){
+            mogUpDnCanvas[i].resetParam();
+        }
     }
 
     public void resetHighScore(){
@@ -821,35 +954,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void setTutorialImage(int stage){
         int nowStage = mogNumAdmin.stage % 5;
-        Log.d("tutorial","Num:" + 5 % 5);
+        Log.d("tutorial","Num:" + nowStage);
         if(stage < 5){ nowStage = stage; }
         int image = 0;
+        int image2 = 0;
         switch(nowStage){
             case 1:
+                //もぐらと鳥
                 image = drawableMap.get("mogra");
                 tutorialText.setText("タップしよう！");
                 tutorialText.setTextColor(Color.WHITE);
+                image2 = drawableMap.get("bird");
+                discriptionImage2.setAlpha(1.0f);
+                dotImg2.setAlpha(1.0f);
                 break;
             case 2:
+                //ひよこ
                 image = drawableMap.get("hiyoko");
                 tutorialText.setText("タップしない！");
                 tutorialText.setTextColor(Color.RED);
+                discriptionImage2.setAlpha(0.0f);
+                dotImg2.setAlpha(0.0f);
                 break;
             case 3:
-                image = drawableMap.get("lemming");
+                //テンレッグとレミング
+                image = drawableMap.get("tenreg");
+                image2 = drawableMap.get("lemming");
+                tutorialText.setText("タップしよう！");
+                tutorialText.setTextColor(Color.WHITE);
+                discriptionImage2.setAlpha(1.0f);
+                dotImg2.setAlpha(1.0f);
                 break;
             case 4:
-                image = drawableMap.get("tenreg");
-                break;
-            case 0:
+                //死神
                 image = drawableMap.get("deathMan");
                 tutorialText.setText("スワイプしよう！");
                 tutorialText.setTextColor(Color.WHITE);
+                discriptionImage2.setAlpha(0.0f);
+                dotImg2.setAlpha(0.0f);
                 break;
             default:
                 Log.d("tutorialImage","1～5を選択せよ！");
         }
         discriptionImage.setImageResource(image);
+        discriptionImage2.setImageResource(image2);
     }
 
     private void mogMultiUp(int[] upMog)
@@ -875,6 +1023,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!mogAttack && !lastTimeMog) {
                     beforeUpTime[upMog[i]] = upTime[upMog[i]];
                     upTime[upMog[i]] = timeCount;
+                    mogUpDnCanvas[i].coolTimeFlag(true);
                     DnHd[upMog[i]].postDelayed(mogRunnable(mogUpDnCanvas[upMog[i]], upTime[upMog[i]],beforeUpTime[upMog[i]]), 2500);
                     //Log.d("NumCount","\nMogra:" + mograCount + "\nHiyoko:" + hiyokoCount);
                     //sumMogra.setText(String.valueOf(mograCount));
@@ -1010,28 +1159,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void gameStart() {
+        tapCount = 0;
         if(firstGame){
             mogNumAdmin.stage = 1;
             nowStageInt.setText(String.valueOf(1));
+            setTutorialImage(mogNumAdmin.stage);
             firstGame = false;
         }
-        if (mogNumAdmin.stage == 1) {
-            clearMog = 250;
-        } else if (mogNumAdmin.stage == 2) {
-            clearMog = 300;
-        } else if (mogNumAdmin.stage % 5 == 0) {
-            clearMog = 200;
+        if (mogNumAdmin.stage < 5) {
+            int scoreNum = mogNumAdmin.stage - 1;
+            clearMog = clearScore[scoreNum];
+        }else{
+            clearMog += 30;
         }
         discript.setAlpha(1.0f);
         updateHighScoreTxt.setAlpha(0.0f);
         dotImg.setAlpha(1.0f);
         tutorialText.setAlpha(1.0f);
         discriptionImage.setAlpha(1.0f);
-        setTutorialImage(mogNumAdmin.stage);
         condiNum.setText(String.valueOf(clearMog));
-        endMsg.setText("ステージクリア条件");
-        endTxt.setText("得点:");
-        endScore.setText(clearMog + "以上");
+//        endMsg.setText("ステージクリア条件");
+//        endTxt.setText("得点:");
+//        endScore.setText(clearMog + "以上");
         backTopBtn.setAlpha(0.0f);
         nextStageBtn.setAlpha(0.0f);
         backTopBtn.setEnabled(false);
@@ -1069,6 +1218,7 @@ public class MainActivity extends AppCompatActivity {
         if (mogNumAdmin.stage != 1) {
             attackFlagAllOff();
             mogAllDown();
+            resetUpDn();
         }
         nowStage = mogNumAdmin.stage;
         startSystemTime = System.currentTimeMillis();
@@ -1147,7 +1297,11 @@ public class MainActivity extends AppCompatActivity {
                     nowGameTime = countdownTime + ((startSystemTime - nowSystemTime) / 1000);
                     //ゲーム時間が終了した場合タイマーストップ
                     if (nowGameTime < 0) {
-                        endGame();
+                        if(onceEnd){
+                            onceEnd = false;
+                            gameTimer.cancel();
+                            endGame();
+                        }
                     } else {
                         if(timeCount > 20){
                             nokoriTime.setText(timeFormat.format(nowGameTime));
@@ -1178,7 +1332,7 @@ public class MainActivity extends AppCompatActivity {
         ngMog = false;
         Random randomMog = new Random();
         //鳥は飛ぶか
-        if(!flyingBird && nowStage > 2){
+        if(!flyingBird){//&& nowStage > 2){
             int canFly = randomMog.nextInt(100);
             if(canFly < 10){
                 mogNumAdmin.mograCountAddOrCut(2);
@@ -1189,13 +1343,13 @@ public class MainActivity extends AppCompatActivity {
         }
         //死神さんが出るか
         int canHum = randomMog.nextInt(100);
-        if(canHum < 100){// && nowStage > 4){
+        if(canHum < 10 && nowStage > 3){
             int multiDeathCount = randomMog.nextInt(4);
             int[] arrayDeath = new int[multiDeathCount];
             for(int d = 0; d < multiDeathCount; d++){
                 int donoDeath = randomMog.nextInt(9);
-                if(!spawnHum[d]){
-                    spawnHum[d] = true;
+                if(!spawnHum[donoDeath]){
+                    spawnHum[donoDeath] = true;
                     arrayDeath[d] = donoDeath;
                 }else{
                     arrayDeath[d] = 10;
@@ -1239,8 +1393,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                     //ひよこになるか
                     int intNgMog = randomMog.nextInt(12);
-                    if((intNgMog < 4 && !lastTimeMog && nowStage > 1)
-                            || (timeCount > ((int)setTime / 2) * 10 && hiyokoCount < upHiyokoNum / 2)){
+                    if(intNgMog < 4 && !lastTimeMog && nowStage > 1){
                         //Log.d("MOG_TAG", "donomog:" + donoMog);
                         ngMog = true;
                     }
@@ -1264,14 +1417,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void endGame(){
+        Log.d("NowStage","stage:" + mogNumAdmin.stage);
+        animLayout.setAlpha(1.0f);
+        gameEndAnim.start();
         endGame = true;
-        gameTimer.cancel();
-        discript.setAlpha(0.0f);
-        tutorialText.setAlpha(0.0f);
-        dotImg.setAlpha(0.0f);
-        discriptionImage.setAlpha(0.0f);
+//        discript.setAlpha(0.0f);
+//        tutorialText.setAlpha(0.0f);
+//        discriptionImage.setAlpha(0.0f);
         updateHighScoreTxt.setAlpha(1.0f);
-        if(updateHighScore){
+        String addHigh = "";
+        if(updateHighScore && !stopMog){
             //ハイスコアを更新していた場合書き換える
             Log.d("DEBUG_TAG","write record");
             SharedPreferences.Editor updateGameData = gameData.edit();
@@ -1280,7 +1435,7 @@ public class MainActivity extends AppCompatActivity {
             updateGameData.apply();
             highScoreTime.setText(highScoreDateFormat.format(highScoreDate.getTime()));
             happyIconAnim();
-            updateHighScoreTxt.setText("ハイスコア更新！");
+            addHigh = bou + "ハイスコア更新！";
             updateHighScore = false;
             recordScore = sharedHighScore;
         }else{
@@ -1298,33 +1453,68 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MainView","GameOver");
         //見た目
         endTxt.setText("Score:");
+        endTxt.setTextSize(30);
         resetScoreBtn.setEnabled(true);
         stopGameBtn.setEnabled(false);
         backTopBtn.setAlpha(1.0f);
-        backTopBtn.setEnabled(true);
+//        backTopBtn.setEnabled(true);
         nextStageBtn.setAlpha(1.0f);
         endScore.setText(String.valueOf(intScore));
-        nextStageBtn.setEnabled(true);
+//        nextStageBtn.setEnabled(true);
         endHummer();
+        float alphaNum = 0.0f;
+        String setClearText = "";
         if(stopMog){
-            endMsg.setText("中断");
-            nextStageBtn.setText("もう一度プレイ");
+            //中断した場合
+//            endMsg.setText("中断");
+            setClearText = bou + "中断";
+            nextStageBtn.setText("再プレイ");
             stopMog = false;
             mogContinue = true;
             nowStageInt.setText("0");
             highScoreTxt.setText(String.format("%03d", recordScore));
             highScoreTxt.setTextColor(Color.BLACK);
             happyIconAnim();
+            alphaNum = 0.0f;
             updateHighScore = false;
         }else if(intScore >= clearMog){
             mogContinue = false;
-            endMsg.setText("クリアー！");
-            nextStageBtn.setText("次のステージへ");
+//            endMsg.setText("クリアー！");
+            setClearText = bou + "クリアー！";
+            nextStageBtn.setText("次ステージへ");
             nextStageBtn.setEnabled(true);
+            alphaNum = 1.0f;
+            mogNumAdmin.stage += 1;
         }else{
-            endMsg.setText("ゲームオーバー");
-            nextStageBtn.setText("もう一度プレイ");
+//            endMsg.setText("ゲームオーバー");
+            setClearText = bou + "ゲームオーバー";
+            nextStageBtn.setText("再プレイ");
+            alphaNum = 0.0f;
             mogContinue = true;
+        }
+//        discript.setAlpha(alphaNum);
+//        discript2.setAlpha(alphaNum);
+//        discriptionImage.setAlpha(alphaNum);
+//        discriptionImage2.setAlpha(alphaNum);
+//        dotImg.setAlpha(alphaNum);
+//        dotImg2.setAlpha(alphaNum);
+//        tutorialText.setAlpha(alphaNum);
+//        tutorialText2.setAlpha(alphaNum);
+        int nextStage = mogNumAdmin.stage -1;
+        if(mogNumAdmin.stage > 3){
+            nextStage = 3;
+            nextClearScore += 20;
+            discript.setText(nextClearScore + "点以上で");
+        }else{
+            discript.setText(clearScore[nextStage] + "点以上で");
+            nextClearScore = clearScore[nextStage];
+        }
+        clearText.setText(setClearText + "\n" + addHigh);
+        stageTxt.setText("ステージ" + mogNumAdmin.stage);
+        if(mogNumAdmin.stage < 5){
+            setTutorialImage(mogNumAdmin.stage);
+        }else{
+            setTutorialImage(4);
         }
         resultLayout.setAlpha(1.0f);
         Handler delayNext = new Handler();
@@ -1358,30 +1548,43 @@ public class MainActivity extends AppCompatActivity {
 
         switch(event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                //指を画面に触れた瞬間
                 touchCanvas.canvasTouch(event.getX(),event.getY());
                 if(!endGame) {
+                    //ゲーム中の場合
                     //タッチしたときの座標取得
                     startTouchX = event.getX();
                     startTouchY = event.getY();
-                }else if(endOKMog){
-                    endOKMog = false;
-                    if(!mogContinue){
-                        mogNumAdmin.stage++;
-                        nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
-                        clearMog += 10;
-                    }
-                    resultLayout.setAlpha(0.0f);
-                    gameStart();
+                }else if(resulting && endOKMog){
+                    resulting = false;
+                    ObjectAnimator layoutAlpAnim = ObjectAnimator.ofFloat(animLayout,"alpha",1.0f,0.0f);
+                    layoutAlpAnim.setDuration(1500);
+                    layoutAlpAnim.start();
+                    backTopBtn.setEnabled(true);
+                    nextStageBtn.setEnabled(true);
                 }
+//                else if(endOKMog){
+//                    endOKMog = false;
+//                    if(!mogContinue){
+//                        mogNumAdmin.stage++;
+//                        nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
+//                        clearMog += 10;
+//                    }
+//                    resultLayout.setAlpha(0.0f);
+//                    gameStart();
+//                }
 
                 break;
             case MotionEvent.ACTION_MOVE:
+                //触れてから離さずに動いた場合
                 if(!endGame) {
                     swipeStartTime = System.currentTimeMillis();
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                //画面から指を離した瞬間
                 if(!endGame) {
+                    //ゲーム中の場合
                     swipeEndTime = System.currentTimeMillis();
                     endTouchX = event.getX();
                     endTouchY = event.getY();
@@ -1391,15 +1594,23 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("ACTION_UP", "Swipe");
                         swipeHum = true;
                     }
-                    if (swipeHum && swipeEndTime - swipeStartTime < 200 && !endGame) {
+                    if (swipeHum && swipeEndTime - swipeStartTime < 200) {
                         swipeHum = false;
                         Log.d("ACTION_UP", "SwipeOK");
                         mogTouchPoint(startTouchX, startTouchY, 2);
-                    } else if (!endGame) {
+                    } else {
 //                    Log.d("MainCanvas", "touchX:" + touchX + "\ntouchY:" + touchY);
 //                    Log.d("Bird","\nBirdPoint:" + birdTopPoint + "\nBird + heightPoint:" + (birdTopPoint +  flyBird.getHeight()) );
                         //座標からどのモグラか判断する
                         mogTouchPoint(startTouchX, startTouchY, 1);
+                    }
+                }else{
+                    //ゲームが終了している
+                    tapCount++;
+                    if(tapCount > 10){
+                        DialogFragment newFlagment = new ShowDialogClass();
+                        newFlagment.show(getSupportFragmentManager(),"Reset");
+                        tapCount = 0;
                     }
                 }
                 break;

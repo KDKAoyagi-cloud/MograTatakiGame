@@ -24,7 +24,7 @@ public class MogUpDnCanvas extends View {
     private ObjectAnimator mogAni;
     private float leftMog,topMog;
     private int mograHeight;
-    private boolean ngMog,upMog,attackMogra,coolTime,mogAnimation,goldMogra;
+    private boolean ngMog,upMog,attackMogra,coolTime,goldMogra,lemmMog,tenMog;
 
     public MogUpDnCanvas(Context context, ShowMsgCanvas cnvShowMsgCanvas,MogNumAdmin canMogNumAdmin,HummerCanvas conHummerCanvas){
         super(context);
@@ -66,14 +66,14 @@ public class MogUpDnCanvas extends View {
         showMsgCanvas = cnvShowMsgCanvas;
         mogAni = new ObjectAnimator();
 
-
         leftMog = 20;
         topMog = 550;
 
-        coolTime = false;
-        upMog = false;
-        attackMogra = false;
-        goldMogra = false;
+        goldMogra   = false;
+        lemmMog     = false;
+        tenMog      = false;
+
+        resetParam();
     }
 
     @Override
@@ -141,8 +141,18 @@ public class MogUpDnCanvas extends View {
         if(mogTap){
             //Log.d("moveMogAni","ngMog:" + ngMog);
             if(ngMog){
-                if(goldMogra){
+                if(goldMogra) {
                     sendScore = 50;
+                    sendHiyoko = 0;
+                    showMsgCanvas.msgType(1);
+                }else if(lemmMog) {
+                    lemmMog = false;
+                    sendScore = 30;
+                    sendHiyoko = 0;
+                    showMsgCanvas.msgType(1);
+                }else if(tenMog){
+                    tenMog = false;
+                    sendScore = 40;
                     sendHiyoko = 0;
                     showMsgCanvas.msgType(1);
                 }else{
@@ -180,32 +190,37 @@ public class MogUpDnCanvas extends View {
         ngMog = piyoinMog;
         if(ngMog){
             //ステージ3以上のときに他のどうぶつも出す
+            lemmMog = false;
+            tenMog  = false;
             Random kindOfMog = new Random();
             int rareInt = kindOfMog.nextInt(100);
-            if(rareInt < 5){
-                outThingBit = smallGoldMograBit;
-                mogNumAdmin.hiyokoCountAddOrCut(-1);
-                mogNumAdmin.mograCountAddOrCut(5);
-                goldMogra = true;
-            }else{
-                int random = 0;
-                if(mogNumAdmin.stage < 3){ random = kindOfMog.nextInt(1); }
-                else if(mogNumAdmin.stage == 3){ random = kindOfMog.nextInt(2); }
-                else{ random = kindOfMog.nextInt(3); }
-                switch (random) {
-                    case 0:
-                        outThingBit = smallHiyokoBit;
-                        break;
-                    case 1:
-                        outThingBit = smallLemmingBit;
-                        break;
-                    case 2:
-                        outThingBit = smallTenregBit;
-                        break;
-                    default:
-                        outThingBit = smallHiyokoBit;
-                        break;
-                }
+            int random = 0;
+//                if(mogNumAdmin.stage < 3){ random = kindOfMog.nextInt(1); }
+//                else if(mogNumAdmin.stage == 3){ random = kindOfMog.nextInt(2); }
+//                else{
+            if(mogNumAdmin.stage > 2){
+                random = kindOfMog.nextInt(3);
+            }
+//                }
+            switch (random) {
+//                    case 0:
+//                        outThingBit = smallHiyokoBit;
+//                        break;
+                case 1:
+                    outThingBit = smallLemmingBit;
+                    mogNumAdmin.hiyokoCountAddOrCut(-1);
+                    mogNumAdmin.mograCountAddOrCut(4);
+                    lemmMog = true;
+                    break;
+                case 2:
+                    outThingBit = smallTenregBit;
+                    mogNumAdmin.hiyokoCountAddOrCut(-1);
+                    mogNumAdmin.mograCountAddOrCut(3);
+                    tenMog = true;
+                    break;
+                default:
+                    outThingBit = smallHiyokoBit;
+                    break;
             }
         }else{
             outThingBit = smallMograBit;
@@ -229,4 +244,11 @@ public class MogUpDnCanvas extends View {
     public boolean checkAttackFlag(){ return attackMogra; }
 
     public int checkMograHeight(){ return mograHeight; }
+
+    public void resetParam(){
+        coolTime = false;
+        upMog = false;
+        attackMogra = true;
+        goldMogra = false;
+    }
 }

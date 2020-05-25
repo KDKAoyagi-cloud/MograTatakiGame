@@ -53,9 +53,11 @@ public class HummerCanvas extends View {
         endRotateAnim = ObjectAnimator.ofFloat(this,"rotation", 23.0f, -23.0f);
 
         animatorSet = new AnimatorSet();
-        animatorSet.play(rotateAnim).with(alphaAnim);
+//        animatorSet.play(rotateAnim).with(alphaAnim);
+        animatorSet.play(alphaAnim);
         endAnimSet  = new AnimatorSet();
-        endAnimSet.play(endRotateAnim).with(endAlphaAnim);
+//        endAnimSet.play(endRotateAnim).with(endAlphaAnim);
+        endAnimSet.play(endAlphaAnim);
         endAnimSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -115,7 +117,8 @@ public class HummerCanvas extends View {
             attack = true;
             endAnimSet.start();
             showMsgCanvas.msgType(1);
-            mogNumAdmin.scoreAddOrCut(10);
+            mogNumAdmin.scoreAddOrCut(50);
+            mogNumAdmin.mograCountAddOrCut(5);
         }
     }
 
@@ -139,8 +142,8 @@ public class HummerCanvas extends View {
             endHum();
             showMsgCanvas.msgType(msgType);
             attack = true;
-            mogNumAdmin.scoreAddOrCut(-10);
-            mogNumAdmin.attackHiyokoCountAddOrCut(1);
+            mogNumAdmin.scoreAddOrCut(-50);
+            mogNumAdmin.attackHiyokoCountAddOrCut(5);
         }
     }
 
