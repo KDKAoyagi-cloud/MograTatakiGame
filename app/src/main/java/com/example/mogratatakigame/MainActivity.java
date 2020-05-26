@@ -786,20 +786,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 onceEnd = true;
-                if(endGame && startGame){
+                if(endGame && firstGame){
                     //ゲームスタート
-                    gameTimer.cancel();
-                    startGame = true;
-                    firstGame = true;
+                    firstGame = false;
                     gameStart();
                 }else if(gameRetry){
                     //もう一度
-                    gameTimer.cancel();
                     gameRetry = false;
                     gameStart();
                 }else{
                     //次のステージ
-                    gameTimer.cancel();
                     gameStart();
                 }
             }
@@ -1200,13 +1196,13 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 if (!endGame) {
                     resultLayout.setAlpha(0.0f);
+                    stopGameBtn.setEnabled(true);
                 }
             }
         }, 2000);
 
         resetScoreBtn.setEnabled(false);
         startMogGameBtn.setEnabled(false);
-        stopGameBtn.setEnabled(true);
         gameTimer = new Timer();
         countdownTime = setTime;
 
@@ -1299,7 +1295,6 @@ public class MainActivity extends AppCompatActivity {
                     if (nowGameTime < 0) {
                         if(onceEnd){
                             onceEnd = false;
-                            gameTimer.cancel();
                             endGame();
                         }
                     } else {
@@ -1417,9 +1412,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void endGame(){
+        gameTimer.cancel();
         Log.d("NowStage","stage:" + mogNumAdmin.stage);
         animLayout.setAlpha(1.0f);
-        gameEndAnim.start();
         endGame = true;
 //        discript.setAlpha(0.0f);
 //        tutorialText.setAlpha(0.0f);
@@ -1491,6 +1486,8 @@ public class MainActivity extends AppCompatActivity {
             nextStageBtn.setText("再プレイ");
             alphaNum = 0.0f;
             mogContinue = true;
+            firstGame = true;
+            mogNumAdmin.stage = 1;
         }
 //        discript.setAlpha(alphaNum);
 //        discript2.setAlpha(alphaNum);
@@ -1516,7 +1513,9 @@ public class MainActivity extends AppCompatActivity {
         }else{
             setTutorialImage(4);
         }
-        resultLayout.setAlpha(1.0f);
+//        resultLayout.setAlpha(1.0f);
+        animLayout.setAlpha(1.0f);
+        gameEndAnim.start();
         Handler delayNext = new Handler();
         delayNext.postDelayed(new Runnable() {
             @Override
@@ -1560,6 +1559,9 @@ public class MainActivity extends AppCompatActivity {
                     ObjectAnimator layoutAlpAnim = ObjectAnimator.ofFloat(animLayout,"alpha",1.0f,0.0f);
                     layoutAlpAnim.setDuration(1500);
                     layoutAlpAnim.start();
+                    ObjectAnimator layoutAlpResult = ObjectAnimator.ofFloat(resultLayout,"alpha",0.0f,1.0f);
+                    layoutAlpResult.setDuration(1500);
+                    layoutAlpResult.start();
                     backTopBtn.setEnabled(true);
                     nextStageBtn.setEnabled(true);
                 }
@@ -1607,7 +1609,7 @@ public class MainActivity extends AppCompatActivity {
                 }else{
                     //ゲームが終了している
                     tapCount++;
-                    if(tapCount > 10){
+                    if(tapCount > 15){
                         DialogFragment newFlagment = new ShowDialogClass();
                         newFlagment.show(getSupportFragmentManager(),"Reset");
                         tapCount = 0;

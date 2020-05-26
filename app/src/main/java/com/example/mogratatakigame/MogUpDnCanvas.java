@@ -141,19 +141,17 @@ public class MogUpDnCanvas extends View {
         if(mogTap){
             //Log.d("moveMogAni","ngMog:" + ngMog);
             if(ngMog){
-                if(goldMogra) {
-                    sendScore = 50;
-                    sendHiyoko = 0;
-                    showMsgCanvas.msgType(1);
-                }else if(lemmMog) {
+                if(lemmMog) {
                     lemmMog = false;
                     sendScore = 30;
                     sendHiyoko = 0;
+                    mogNumAdmin.mograCountAddOrCut(4);
                     showMsgCanvas.msgType(1);
                 }else if(tenMog){
                     tenMog = false;
                     sendScore = 40;
                     sendHiyoko = 0;
+                    mogNumAdmin.mograCountAddOrCut(3);
                     showMsgCanvas.msgType(1);
                 }else{
                     sendScore = -10;
@@ -193,19 +191,11 @@ public class MogUpDnCanvas extends View {
             lemmMog = false;
             tenMog  = false;
             Random kindOfMog = new Random();
-            int rareInt = kindOfMog.nextInt(100);
             int random = 0;
-//                if(mogNumAdmin.stage < 3){ random = kindOfMog.nextInt(1); }
-//                else if(mogNumAdmin.stage == 3){ random = kindOfMog.nextInt(2); }
-//                else{
             if(mogNumAdmin.stage > 2){
                 random = kindOfMog.nextInt(3);
             }
-//                }
             switch (random) {
-//                    case 0:
-//                        outThingBit = smallHiyokoBit;
-//                        break;
                 case 1:
                     outThingBit = smallLemmingBit;
                     mogNumAdmin.hiyokoCountAddOrCut(-1);
