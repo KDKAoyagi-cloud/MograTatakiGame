@@ -41,7 +41,7 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     private boolean updateHighScore,mogAttack,moveOKMog;
     private boolean ngMog,lastTimeMog,endGame,stopMog,mogContinue,firstGame,endOKMog,startOKMog,tutorialOn;
-    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd;
+    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd,gameover;
     private boolean[] recordHiyoko = {false, false, false, false, false, false, false, false, false};
     private boolean[] spawnHum     = {false, false, false, false, false, false, false, false, false};
     private String bou = "| ";
@@ -289,6 +289,7 @@ public class MainActivity extends AppCompatActivity {
         resulting       = false;
         endingNow       = false;
         onceEnd         = true;
+        gameover        = true;
 
         //
         // スコアパーツ部分
@@ -762,8 +763,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 gameTimer.cancel();
+                animLayout.setAlpha(1.0f);
                 startGame = false;
-                endOKMog = false;
                 mogContinue = false;
                 firstGame = true;
                 onceEnd   = true;
@@ -773,10 +774,15 @@ public class MainActivity extends AppCompatActivity {
                 nextStageBtn.setEnabled(true);
                 backTopBtn.setEnabled(false);
                 initZeroTextView();
-                resultLayout.setAlpha(1.0f);
-                animLayout.setAlpha(0.0f);
                 mogNumAdmin.stage = 1;
                 setTutorialImage(1);
+                gameover = true;
+                resultLayout.setAlpha(0.0f);
+                animLayout.setAlpha(1.0f);
+                clearText.setText(bou + "ゲームリセット");
+                resulting = true;
+                endOKMog = true;
+                gameEndAnim.start();
             }
         });
 
@@ -1155,6 +1161,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void gameStart() {
+        gameover = false;
         tapCount = 0;
         if(firstGame){
             mogNumAdmin.stage = 1;
@@ -1338,7 +1345,7 @@ public class MainActivity extends AppCompatActivity {
         }
         //死神さんが出るか
         int canHum = randomMog.nextInt(100);
-        if(canHum < 10 && nowStage > 3){
+        if(canHum < 30 && nowStage > 3){
             int multiDeathCount = randomMog.nextInt(4);
             int[] arrayDeath = new int[multiDeathCount];
             for(int d = 0; d < multiDeathCount; d++){
@@ -1585,6 +1592,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case MotionEvent.ACTION_UP:
                 //画面から指を離した瞬間
+//                Log.d("TouchPoint", "Touch up pointX:" + event.getX() + " pointY:" + event.getY());
                 if(!endGame) {
                     //ゲーム中の場合
                     swipeEndTime = System.currentTimeMillis();
@@ -1592,7 +1600,7 @@ public class MainActivity extends AppCompatActivity {
                     endTouchY = event.getY();
                     float absX = Math.abs(startTouchX - endTouchX);
                     float absY = Math.abs(startTouchY - endTouchY);
-                    if (absX > 100 && absY > 100) {
+                    if ((absX > 50 || endTouchX < 50) && absY > 50) {
                         Log.d("ACTION_UP", "Swipe");
                         swipeHum = true;
                     }
@@ -1606,7 +1614,7 @@ public class MainActivity extends AppCompatActivity {
                         //座標からどのモグラか判断する
                         mogTouchPoint(startTouchX, startTouchY, 1);
                     }
-                }else{
+                }else if(gameover){
                     //ゲームが終了している
                     tapCount++;
                     if(tapCount > 15){

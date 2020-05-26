@@ -133,35 +133,36 @@ public class MogUpDnCanvas extends View {
             if(upMog){ return false; }
             attackMogra = false;
             fromY = 200.0f;
+            if(lemmMog){
+                mogNumAdmin.mograCountAddOrCut(4);
+            }else if(tenMog){
+                mogNumAdmin.mograCountAddOrCut(3);
+            }
         }else{
             if(!upMog){ return false; }
             attackMogra = true;
             toY = 200.0f;
         }
         if(mogTap){
+            //タップした時の動作
             //Log.d("moveMogAni","ngMog:" + ngMog);
             if(ngMog){
                 if(lemmMog) {
                     lemmMog = false;
                     sendScore = 30;
-                    sendHiyoko = 0;
-                    mogNumAdmin.mograCountAddOrCut(4);
                     showMsgCanvas.msgType(1);
                 }else if(tenMog){
                     tenMog = false;
                     sendScore = 40;
-                    sendHiyoko = 0;
-                    mogNumAdmin.mograCountAddOrCut(3);
                     showMsgCanvas.msgType(1);
                 }else{
                     sendScore = -10;
                     sendHiyoko = 10;
-                    mogNumAdmin.mograCountAddOrCut(1);
                     showMsgCanvas.msgType(0);
                 }
             }else{
+                //モグラの場合
                 sendScore = 10;
-                sendHiyoko = 0;
                 showMsgCanvas.msgType(1);
             }
         }
@@ -174,7 +175,7 @@ public class MogUpDnCanvas extends View {
         if(type == "up"){ upMog = true; }
         else{
             upMog = false;
-            goldMogra = false;
+//            goldMogra = false;
         }
         coolTime = true;
 
@@ -199,13 +200,11 @@ public class MogUpDnCanvas extends View {
                 case 1:
                     outThingBit = smallLemmingBit;
                     mogNumAdmin.hiyokoCountAddOrCut(-1);
-                    mogNumAdmin.mograCountAddOrCut(4);
                     lemmMog = true;
                     break;
                 case 2:
                     outThingBit = smallTenregBit;
                     mogNumAdmin.hiyokoCountAddOrCut(-1);
-                    mogNumAdmin.mograCountAddOrCut(3);
                     tenMog = true;
                     break;
                 default:

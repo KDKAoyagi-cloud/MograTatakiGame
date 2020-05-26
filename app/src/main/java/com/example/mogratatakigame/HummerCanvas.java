@@ -84,16 +84,16 @@ public class HummerCanvas extends View {
         float setX = x;
         float setY = y;
 
-        if(col == 1){
-            setY += 200;
-        }else if(col == 2){
-            setY += 100;
-        }
-        if(row == 3){
-            setX += 120;
-        }else if(row == 2){
-            setX += 50;
-        }
+//        if(col == 1){
+//            setY += 200;
+//        }else if(col == 2){
+//            setY += 100;
+//        }
+//        if(row == 3){
+//            setX += 120;
+//        }else if(row == 2){
+//            setX += 50;
+//        }
 
         paintX = setX;
         paintY = setY;
@@ -143,7 +143,7 @@ public class HummerCanvas extends View {
             showMsgCanvas.msgType(msgType);
             attack = true;
             mogNumAdmin.scoreAddOrCut(-50);
-            mogNumAdmin.attackHiyokoCountAddOrCut(5);
+            mogNumAdmin.attackHiyokoCountAddOrCut(50);
         }
     }
 
