@@ -134,9 +134,9 @@ public class MogUpDnCanvas extends View {
             attackMogra = false;
             fromY = 200.0f;
             if(lemmMog){
-                mogNumAdmin.mograCountAddOrCut(4);
-            }else if(tenMog){
                 mogNumAdmin.mograCountAddOrCut(3);
+            }else if(tenMog){
+//                mogNumAdmin.mograCountAddOrCut(3);
             }
         }else{
             if(!upMog){ return false; }
@@ -153,8 +153,9 @@ public class MogUpDnCanvas extends View {
                     showMsgCanvas.msgType(1);
                 }else if(tenMog){
                     tenMog = false;
-                    sendScore = 40;
-                    showMsgCanvas.msgType(1);
+                    sendScore = -30;
+                    sendHiyoko = 30;
+                    showMsgCanvas.msgType(0);
                 }else{
                     sendScore = -10;
                     sendHiyoko = 10;

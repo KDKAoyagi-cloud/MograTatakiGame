@@ -1,6 +1,7 @@
 package com.example.mogratatakigame;
 
 import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.SuppressLint;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
@@ -41,7 +43,7 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     private boolean updateHighScore,mogAttack,moveOKMog;
     private boolean ngMog,lastTimeMog,endGame,stopMog,mogContinue,firstGame,endOKMog,startOKMog,tutorialOn;
-    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd,gameover;
+    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd,gameover,resetStage;
     private boolean[] recordHiyoko = {false, false, false, false, false, false, false, false, false};
     private boolean[] spawnHum     = {false, false, false, false, false, false, false, false, false};
     private String bou = "| ";
@@ -58,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView scoreTxt,nokoriTime, highScoreTxt,sumMogra,sumHiyoko,hiyokoCountint
             ,highScoreTime,endMsg,endTxt,endScore,updateHighScoreTxt,nowStageTxt,nowStageInt
             ,nowCondiNum,condiNum,clearTxt,discript,discript2,tutorialText,tutorialText2
-            ,tutorialCheckText,stageTxt,stageInt,touchPleaseTxt,clearText;
-    private ImageView happyIcon,flyBird,discriptionImage,discriptionImage2,dotImg,dotImg2;
+            ,tutorialCheckText,stageTxt,stageInt,touchPleaseTxt,clearText,ngTutTxt,ngTutTxt2;
+    private ImageView happyIcon,flyBird,discriptionImage,discriptionImage2,discriptionImage3,dotImg,dotImg2,dotImg3;
     private Handler timerHandler;
     private Handler[] DnHd,humHd;
     private RelativeLayout resultLayout,animLayout;
@@ -79,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private PointTestCanvas pointTestCanvas;
     private TouchCanvas touchCanvas;
     private CheckBox checkBox;
-    private AnimatorSet gameEndAnim,endAlphaAnim;
+    private AnimatorSet gameEndAnim,endAlphaAnim,tutUp,tutDn;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint({"ResourceType", "ClickableViewAccessibility"})
@@ -212,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                     birdTap = false;
                 }
                 AlphaAnimation alphaBird = new AlphaAnimation(1.0f,0.0f);
-                alphaBird.setDuration(1000);
+                alphaBird.setDuration(1200);
                 alphaBird.setFillEnabled(true);
                 alphaBird.setAnimationListener(new Animation.AnimationListener() {
                     @Override
@@ -290,6 +292,7 @@ public class MainActivity extends AppCompatActivity {
         endingNow       = false;
         onceEnd         = true;
         gameover        = true;
+        resetStage      = false;
 
         //
         // スコアパーツ部分
@@ -373,8 +376,8 @@ public class MainActivity extends AppCompatActivity {
         RelativeLayout.LayoutParams hiScoreTimeParam     = new RelativeLayout.LayoutParams(dpToPx(140) , dpToPx(43));
         RelativeLayout.LayoutParams hiyokoCountParam     = new RelativeLayout.LayoutParams(dpToPx(115), dpToPx(43));
         RelativeLayout.LayoutParams hiyokoCountintParam  = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(100));
-        //RelativeLayout.LayoutParams hiyokoSlashParam     = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
-        //RelativeLayout.LayoutParams sumHiyokoParam       = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
+//        RelativeLayout.LayoutParams hiyokoSlashParam     = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
+//        RelativeLayout.LayoutParams sumHiyokoParam       = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
         RelativeLayout.LayoutParams nokoriTxtParam       = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
         RelativeLayout.LayoutParams nokoriParam          = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
         RelativeLayout.LayoutParams nowStageTxtParam     = new RelativeLayout.LayoutParams(dpToPx(90) , dpToPx(43));
@@ -478,6 +481,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //ボタンタップ時の処理
+                if(mogNumAdmin.stage == 1){
+                    backTopBtn.setEnabled(false);
+                }
                 stopMog = true;
                 updateHighScore = false;
                 endGame();
@@ -635,6 +641,8 @@ public class MainActivity extends AppCompatActivity {
         tutorialText2         = new TextView(this);
         tutorialCheckText     = new TextView(this);
         touchPleaseTxt        = new TextView(this);
+        ngTutTxt              = new TextView(this);
+        ngTutTxt2             = new TextView(this);
 
         stageTxt.setText("ステージ1");
         stageInt.setText("0");
@@ -647,6 +655,8 @@ public class MainActivity extends AppCompatActivity {
         tutorialText2.setText("を");
         tutorialCheckText.setText("チュートリアルを表示しない");
         touchPleaseTxt.setText("画面をタップしてスタート！");
+        ngTutTxt.setText("は");
+        ngTutTxt2.setText("タップしない！");
 
         stageTxt.setTextSize(60);
         stageInt.setTextSize(60);
@@ -659,6 +669,8 @@ public class MainActivity extends AppCompatActivity {
         tutorialText2.setTextSize(35);
         tutorialCheckText.setTextSize(20);
         touchPleaseTxt.setTextSize(30);
+        ngTutTxt.setTextSize(35);
+        ngTutTxt2.setTextSize(35);
 
         stageTxt.setTextColor(whiteColor);
         stageInt.setTextColor(whiteColor);
@@ -671,6 +683,8 @@ public class MainActivity extends AppCompatActivity {
         tutorialText2.setTextColor(whiteColor);
         tutorialCheckText.setTextColor(whiteColor);
         touchPleaseTxt.setTextColor(whiteColor);
+        ngTutTxt.setTextColor(whiteColor);
+        ngTutTxt2.setTextColor(Color.RED);
 
         RelativeLayout.LayoutParams stageTxtParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams stageIntParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -681,6 +695,8 @@ public class MainActivity extends AppCompatActivity {
         RelativeLayout.LayoutParams discript2Param          = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams tutorialParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams tutorialParam2          = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams ngTutParam              = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams ngTutParam2             = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         RelativeLayout.LayoutParams checkTxtParam           = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         stageTxtParam.setMargins            (130,100,0,0);
@@ -692,12 +708,15 @@ public class MainActivity extends AppCompatActivity {
         discript2Param.setMargins           (0, 1200, 0, 0);
         tutorialParam.setMargins            (tutMarginLeft,tutMarginTop2,0,0);
         tutorialParam2.setMargins           (tutMarginLeft3,tutMarginTop + 50,0,0);
+        ngTutParam2.setMargins              (tutMarginLeft,tutMarginTop2,0,0);
+        ngTutParam.setMargins               (tutMarginLeft3,tutMarginTop + 50,0,0);
         checkTxtParam.setMargins            (100,1400,0,0);
 
         endMsgParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
         discriptParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
         discript2Param.addRule(RelativeLayout.CENTER_HORIZONTAL);
         tutorialParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        ngTutParam2.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
         stageTxt.setLayoutParams(stageTxtParam);
         stageInt.setLayoutParams(stageIntParam);
@@ -709,6 +728,11 @@ public class MainActivity extends AppCompatActivity {
         tutorialText.setLayoutParams(tutorialParam);
         tutorialText2.setLayoutParams(tutorialParam2);
         tutorialCheckText.setLayoutParams(checkTxtParam);
+        ngTutTxt.setLayoutParams(ngTutParam);
+        ngTutTxt2.setLayoutParams(ngTutParam2);
+
+        ngTutTxt.setAlpha(0.0f);
+        ngTutTxt2.setAlpha(0.0f);
 
         //ImageView
         RelativeLayout.LayoutParams dotParam = new RelativeLayout.LayoutParams(210,210);
@@ -725,6 +749,13 @@ public class MainActivity extends AppCompatActivity {
         dotImg2.setLayoutParams(dotParam2);
         dotImg2.setAlpha(1.0f);
 
+        RelativeLayout.LayoutParams dotParam3 = new RelativeLayout.LayoutParams(210,210);
+        dotParam3.setMargins(tutMarginLeft2,tutMarginTop,0,0);
+        dotImg3 = new ImageView(this);
+        dotImg3.setImageResource(R.drawable.dot);
+        dotImg3.setLayoutParams(dotParam3);
+        dotImg3.setAlpha(0.0f);
+
         RelativeLayout.LayoutParams imageViewParam = new RelativeLayout.LayoutParams(200,200);
         imageViewParam.setMargins(tutMarginLeft,tutMarginTop,0,0);
         discriptionImage   = new ImageView(this);
@@ -737,7 +768,14 @@ public class MainActivity extends AppCompatActivity {
         discriptionImage2   = new ImageView(this);
         discriptionImage2.setImageResource(drawableMap.get("mogra"));
         discriptionImage2.setLayoutParams(imageViewParam2);
-        discriptionImage2.setAlpha(0.0f);
+        discriptionImage2.setAlpha(1.0f);
+
+        RelativeLayout.LayoutParams imageViewParam3 = new RelativeLayout.LayoutParams(200,200);
+        imageViewParam3.setMargins(tutMarginLeft2,tutMarginTop,0,0);
+        discriptionImage3   = new ImageView(this);
+        discriptionImage3.setImageResource(drawableMap.get("tenreg"));
+        discriptionImage3.setLayoutParams(imageViewParam3);
+        discriptionImage3.setAlpha(0.0f);
 
         //Resultボタン
         backTopBtn   = new Button(this);
@@ -791,18 +829,20 @@ public class MainActivity extends AppCompatActivity {
         nextStageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onceEnd = true;
-                if(endGame && firstGame){
-                    //ゲームスタート
-                    firstGame = false;
-                    gameStart();
-                }else if(gameRetry){
-                    //もう一度
-                    gameRetry = false;
-                    gameStart();
-                }else{
-                    //次のステージ
-                    gameStart();
+                if(!resulting){
+                    onceEnd = true;
+                    if(endGame && firstGame){
+                        //ゲームスタート
+                        firstGame = false;
+                        gameStart();
+                    }else if(gameRetry){
+                        //もう一度
+                        gameRetry = false;
+                        gameStart();
+                    }else{
+                        //次のステージ
+                        gameStart();
+                    }
                 }
             }
         });
@@ -824,12 +864,16 @@ public class MainActivity extends AppCompatActivity {
 //        resultLayout.addView(updateHighScoreTxt);
         resultLayout.addView(discript);
         resultLayout.addView(discript2);
+        resultLayout.addView(ngTutTxt);
+        resultLayout.addView(ngTutTxt2);
         resultLayout.addView(dotImg);
         resultLayout.addView(discriptionImage);
         resultLayout.addView(tutorialText);
         resultLayout.addView(dotImg2);
         resultLayout.addView(discriptionImage2);
         resultLayout.addView(tutorialText2);
+        resultLayout.addView(dotImg3);
+        resultLayout.addView(discriptionImage3);
         resultLayout.addView(backTopBtn);
         resultLayout.addView(nextStageBtn);
 //        resultLayout.addView(checkBox);
@@ -851,11 +895,11 @@ public class MainActivity extends AppCompatActivity {
         clearParam.addRule(RelativeLayout.CENTER_HORIZONTAL);
         clearText.setLayoutParams(clearParam);
         clearText.setText(bou + "クリアー");
-        clearText.setTextSize(50);
+        clearText.setTextSize(40);
         clearText.setTextColor(whiteColor);
         updateHighScoreTxt.setLayoutParams(updateHighScoreTxtParam);
         updateHighScoreTxt.setText(bou + "ハイスコア更新！");
-        updateHighScoreTxt.setTextSize(50);
+        updateHighScoreTxt.setTextSize(55);
         updateHighScoreTxt.setTextColor(whiteColor);
         animLayout.addView(clearText);
 //        animLayout.addView(updateHighScoreTxt);
@@ -913,16 +957,114 @@ public class MainActivity extends AppCompatActivity {
         });
         gameEndAnim.play(downAnim).with(downHighAnim).with(alphaAnim).with(alphaHighAnim);;
 
-        /*
         //座標の計算が終了後に値を取得する
         relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onGlobalLayout() {
+                int[] dotP = new int[2];
+                int[] dotP2 = new int[2];
+                int[] tutTxtP = new int[2];
+                int[] tutTxt2P = new int[2];
+                dotImg.getLocationOnScreen(dotP);
+                dotImg2.getLocationOnScreen(dotP2);
+                tutorialText.getLocationOnScreen(tutTxtP);
+                tutorialText2.getLocationOnScreen(tutTxt2P);
+                float dotPY = dotP[0] / 100;
+                float dot2PY = dotP2[0] / 100;;
+                float tutTxtPY = tutTxtP[0] / 100;
+                float tutTxt2PY = tutTxt2P[0] / 100;
+                int moveTut = 250;
+                Log.d("Object Point","Tutorial Image X:" + dotImg.getX() + " Y:" + dotImg.getY() + "\nX:" + dotP[0] + " Y:" + dotP[1]);
+//                ObjectAnimator dotLeftAnim = ObjectAnimator.ofFloat(dotImg,"translationX",dotPX,dotPX);
+//                dotLeftAnim.setDuration(1000);
+                ObjectAnimator dotUpAnim = ObjectAnimator.ofFloat(dotImg,"translationY",dotPY,dotPY - moveTut);
+                dotUpAnim.setDuration(1000);
+                ObjectAnimator tutImgUpAnim = ObjectAnimator.ofFloat(discriptionImage,"translationY",dotPY,dotPY - moveTut);
+                tutImgUpAnim.setDuration(1000);
+                ObjectAnimator dot2UpAnim = ObjectAnimator.ofFloat(dotImg2,"translationY",dot2PY,dot2PY - moveTut);
+                dot2UpAnim.setDuration(1000);
+                ObjectAnimator tutImg2UpAnim = ObjectAnimator.ofFloat(discriptionImage2,"translationY",dot2PY,dot2PY - moveTut);
+                tutImg2UpAnim.setDuration(1000);
+                ObjectAnimator tutTxtUpAnim = ObjectAnimator.ofFloat(tutorialText,"translationY",tutTxtPY,tutTxtPY - moveTut);
+                tutTxtUpAnim.setDuration(1000);
+                ObjectAnimator tutTxtUp2Anim = ObjectAnimator.ofFloat(tutorialText2,"translationY",tutTxt2PY,tutTxt2PY - moveTut);
+                tutTxtUp2Anim.setDuration(1000);
 
+//                ObjectAnimator imgAlphaAnim = ObjectAnimator.ofFloat(discriptionImage,"alpha",1.0f,0.0f);
+//                imgAlphaAnim.setDuration(1000);
+//                ObjectAnimator dotAlphaAnim = ObjectAnimator.ofFloat(dotImg,"alpha",1.0f,0.0f);
+//                dotAlphaAnim.setDuration(1000);
+
+                ObjectAnimator ngTutAlphaAnim = ObjectAnimator.ofFloat(ngTutTxt,"alpha",0.0f,1.0f);
+                ngTutAlphaAnim.setDuration(1000);
+                ObjectAnimator ngTut2AlphaAnim = ObjectAnimator.ofFloat(ngTutTxt2,"alpha",0.0f,1.0f);
+                ngTut2AlphaAnim.setDuration(1000);
+                ObjectAnimator ngTuImgAlphaAnim = ObjectAnimator.ofFloat(discriptionImage3,"alpha",0.0f,1.0f);
+                ngTuImgAlphaAnim.setDuration(1000);
+                ObjectAnimator ngTuDotAlphaAnim = ObjectAnimator.ofFloat(dotImg3,"alpha",0.0f,1.0f);
+                ngTuDotAlphaAnim.setDuration(1000);
+
+                int[] ngDotP = new int[2];
+                int[] ngTutTxtP = new int[2];
+                int[] ngTutTxt2P = new int[2];
+                dotImg3.getLocationOnScreen(ngDotP);
+                ngTutTxt.getLocationOnScreen(ngTutTxtP);
+                ngTutTxt2.getLocationOnScreen(ngTutTxt2P);
+                float ngDotPY = ngDotP[0] / 100;
+                float ngTutTxtPY = tutTxtP[0] / 100;
+                float ngTutTxt2PY = tutTxt2P[0] / 100;
+                int ngMoveTut = 100;
+
+                ObjectAnimator ngDotDnAnim = ObjectAnimator.ofFloat(dotImg3,"translationY",ngDotPY,ngDotPY + ngMoveTut);
+                dotUpAnim.setDuration(1000);
+                ObjectAnimator ngTutImgDnAnim = ObjectAnimator.ofFloat(discriptionImage3,"translationY",ngDotPY,ngDotPY + ngMoveTut);
+                tutImgUpAnim.setDuration(1000);
+                ObjectAnimator ngTutTxtDnAnim = ObjectAnimator.ofFloat(ngTutTxt,"translationY",ngTutTxtPY,ngTutTxtPY + ngMoveTut);
+                tutTxtUpAnim.setDuration(1000);
+                ObjectAnimator ngTutTxtDn2Anim = ObjectAnimator.ofFloat(ngTutTxt2,"translationY",ngTutTxt2PY,ngTutTxt2PY + ngMoveTut);
+                tutTxtUp2Anim.setDuration(1000);
+
+                tutUp = new AnimatorSet();
+                tutUp.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        nextStageBtn.setEnabled(true);
+                    }
+                });
+                tutUp.play(dotUpAnim).with(tutImgUpAnim).with(dot2UpAnim).with(tutImg2UpAnim).with(tutTxtUpAnim).with(tutTxtUp2Anim).with(ngTutAlphaAnim).with(ngTut2AlphaAnim).with(ngTuImgAlphaAnim).with(ngTuDotAlphaAnim).with(ngDotDnAnim).with(ngTutImgDnAnim).with(ngTutTxtDnAnim).with(ngTutTxtDn2Anim);
+
+                ObjectAnimator dotDnAnim = ObjectAnimator.ofFloat(dotImg,"translationY",dotPY - moveTut,dotPY);
+                dotDnAnim.setDuration(1000);
+                ObjectAnimator tutImgDnAnim = ObjectAnimator.ofFloat(discriptionImage,"translationY",dotPY - moveTut,dotPY);
+                tutImgDnAnim.setDuration(1000);
+                ObjectAnimator dot2DnAnim = ObjectAnimator.ofFloat(dotImg2,"translationY",dot2PY - moveTut,dot2PY);
+                dot2DnAnim.setDuration(1000);
+                ObjectAnimator tutImg2DnAnim = ObjectAnimator.ofFloat(discriptionImage2,"translationY",dot2PY - moveTut,dot2PY);
+                tutImg2DnAnim.setDuration(1000);
+                ObjectAnimator tutTxtDnAnim = ObjectAnimator.ofFloat(tutorialText,"translationY",tutTxtPY - moveTut,tutTxtPY);
+                tutTxtDnAnim.setDuration(1000);
+                ObjectAnimator tutTxtDn2Anim = ObjectAnimator.ofFloat(tutorialText2,"translationY",tutTxt2PY - moveTut,tutTxt2PY);
+                tutTxtDn2Anim.setDuration(1000);
+
+                ObjectAnimator ngTutAlphaEnAnim = ObjectAnimator.ofFloat(ngTutTxt,"alpha",1.0f,0.0f);
+                ngTutAlphaEnAnim.setDuration(1000);
+                ObjectAnimator ngTut2AlphaEnAnim = ObjectAnimator.ofFloat(ngTutTxt2,"alpha",1.0f,0.0f);
+                ngTut2AlphaEnAnim.setDuration(1000);
+                ObjectAnimator ngTuImgAlphaEnAnim = ObjectAnimator.ofFloat(discriptionImage3,"alpha",1.0f,0.0f);
+                ngTuImgAlphaEnAnim.setDuration(1000);
+                ObjectAnimator ngTuDotAlphaEnAnim = ObjectAnimator.ofFloat(dotImg3,"alpha",1.0f,0.0f);
+                ngTuDotAlphaEnAnim.setDuration(1000);
+
+                tutDn = new AnimatorSet();
+                tutDn.addListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        nextStageBtn.setEnabled(true);
+                    }
+                });
+                tutDn.play(dotDnAnim).with(tutImgDnAnim).with(dot2DnAnim).with(tutImg2DnAnim).with(tutTxtDnAnim).with(tutTxtDn2Anim);//.with(ngTutAlphaEnAnim).with(ngTut2AlphaEnAnim).with(ngTuImgAlphaEnAnim).with(ngTuDotAlphaEnAnim);
             }
         });
-         */
     }
 
     private void initZeroTextView(){
@@ -967,33 +1109,33 @@ public class MainActivity extends AppCompatActivity {
                 tutorialText.setText("タップしよう！");
                 tutorialText.setTextColor(Color.WHITE);
                 image2 = drawableMap.get("bird");
-                discriptionImage2.setAlpha(1.0f);
-                dotImg2.setAlpha(1.0f);
+                discriptionImage.setAlpha(1.0f);
+                dotImg.setAlpha(1.0f);
                 break;
             case 2:
                 //ひよこ
-                image = drawableMap.get("hiyoko");
+                image2 = drawableMap.get("hiyoko");
                 tutorialText.setText("タップしない！");
                 tutorialText.setTextColor(Color.RED);
-                discriptionImage2.setAlpha(0.0f);
-                dotImg2.setAlpha(0.0f);
+                discriptionImage.setAlpha(0.0f);
+                dotImg.setAlpha(0.0f);
                 break;
             case 3:
                 //テンレッグとレミング
-                image = drawableMap.get("tenreg");
+//                image2 = drawableMap.get("tenreg");
                 image2 = drawableMap.get("lemming");
                 tutorialText.setText("タップしよう！");
                 tutorialText.setTextColor(Color.WHITE);
-                discriptionImage2.setAlpha(1.0f);
-                dotImg2.setAlpha(1.0f);
+                discriptionImage.setAlpha(0.0f);
+                dotImg.setAlpha(0.0f);
                 break;
             case 4:
                 //死神
-                image = drawableMap.get("deathMan");
+                image2 = drawableMap.get("deathMan");
                 tutorialText.setText("スワイプしよう！");
                 tutorialText.setTextColor(Color.WHITE);
-                discriptionImage2.setAlpha(0.0f);
-                dotImg2.setAlpha(0.0f);
+                discriptionImage.setAlpha(0.0f);
+                dotImg.setAlpha(0.0f);
                 break;
             default:
                 Log.d("tutorialImage","1～5を選択せよ！");
@@ -1177,9 +1319,9 @@ public class MainActivity extends AppCompatActivity {
         }
         discript.setAlpha(1.0f);
         updateHighScoreTxt.setAlpha(0.0f);
-        dotImg.setAlpha(1.0f);
-        tutorialText.setAlpha(1.0f);
-        discriptionImage.setAlpha(1.0f);
+//        dotImg.setAlpha(1.0f);
+//        tutorialText.setAlpha(1.0f);
+//        discriptionImage.setAlpha(1.0f);
         condiNum.setText(String.valueOf(clearMog));
 //        endMsg.setText("ステージクリア条件");
 //        endTxt.setText("得点:");
@@ -1462,7 +1604,7 @@ public class MainActivity extends AppCompatActivity {
 //        backTopBtn.setEnabled(true);
         nextStageBtn.setAlpha(1.0f);
         endScore.setText(String.valueOf(intScore));
-//        nextStageBtn.setEnabled(true);
+//        nextStageBtn.setEnabled(false);
         endHummer();
         float alphaNum = 0.0f;
         String setClearText = "";
@@ -1494,6 +1636,7 @@ public class MainActivity extends AppCompatActivity {
             alphaNum = 0.0f;
             mogContinue = true;
             firstGame = true;
+            backTopBtn.setEnabled(false);
             mogNumAdmin.stage = 1;
         }
 //        discript.setAlpha(alphaNum);
@@ -1506,6 +1649,12 @@ public class MainActivity extends AppCompatActivity {
 //        tutorialText2.setAlpha(alphaNum);
         int nextStage = mogNumAdmin.stage -1;
         if(mogNumAdmin.stage > 3){
+            if(mogNumAdmin.stage == 4){
+                dotImg3.setAlpha(0.0F);
+                discriptionImage3.setAlpha(0.0f);
+                ngTutTxt.setAlpha(0.0f);
+                ngTutTxt2.setAlpha(0.0f);
+            }
             nextStage = 3;
             nextClearScore += 20;
             discript.setText(nextClearScore + "点以上で");
@@ -1544,6 +1693,12 @@ public class MainActivity extends AppCompatActivity {
         return (int)((px * d) + 0.5);
     }
 
+    private float dpToPx(float px)
+    {
+        float d = screenDensity;
+        return (float)((px / d) * 0.5);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event)
     {
@@ -1563,14 +1718,35 @@ public class MainActivity extends AppCompatActivity {
                     startTouchY = event.getY();
                 }else if(resulting && endOKMog){
                     resulting = false;
+                    endOKMog = false;
                     ObjectAnimator layoutAlpAnim = ObjectAnimator.ofFloat(animLayout,"alpha",1.0f,0.0f);
                     layoutAlpAnim.setDuration(1500);
                     layoutAlpAnim.start();
                     ObjectAnimator layoutAlpResult = ObjectAnimator.ofFloat(resultLayout,"alpha",0.0f,1.0f);
-                    layoutAlpResult.setDuration(1500);
+                    layoutAlpResult.setDuration(1000);
+                    layoutAlpAnim.addListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            if(mogNumAdmin.stage == 3) {
+                                tutUp.start();
+                            }else if(mogNumAdmin.stage == 4){
+                                tutDn.start();
+                            }else{
+                                nextStageBtn.setEnabled(true);
+                            }
+                        }
+                    });
                     layoutAlpResult.start();
-                    backTopBtn.setEnabled(true);
-                    nextStageBtn.setEnabled(true);
+                    if(gameover){
+                        discriptionImage3.setAlpha(0.0f);
+                        dotImg3.setAlpha(0.0f);
+                        ngTutTxt.setAlpha(0.0f);
+                        ngTutTxt2.setAlpha(0.0f);
+                        tutDn.start();
+                        backTopBtn.setEnabled(false);
+                    }else{
+                        backTopBtn.setEnabled(true);
+                    }
                 }
 //                else if(endOKMog){
 //                    endOKMog = false;
@@ -1640,7 +1816,7 @@ public class MainActivity extends AppCompatActivity {
          */
         boolean topMog,centerMog,bottomMog;
         topMog = centerMog = bottomMog = false;
-        if(birdTopPoint <= touchY && touchY < birdTopPoint + flyBird.getHeight() && flyingBird && !birdTap){
+        if(birdTopPoint <= touchY && touchY < birdTopPoint + flyBird.getHeight() + 30 && flyingBird && !birdTap){
             Log.d("Bird","BirdTouched");
             showMsgCanvas[9].setMsgPoint(touchX,touchY);
             showMsgCanvas[9].msgType(1);
