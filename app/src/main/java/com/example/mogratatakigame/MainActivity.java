@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             mograCountint,birdTopPoint,nowStage,tapCount,nextClearScore;
     private int[] upTime        = {0, 0, 0, 0, 0, 0, 0, 0, 0};
     private int[] beforeUpTime  = {0, 0, 0, 0, 0, 0, 0, 0, 0};
-    private int[] clearScore    = {250,230,270,300};
+    private int[] clearScore    = {250,230,300,400};
 //    private int[] gameMograTime,gameHiyokoTime;
     private TextView scoreTxt,nokoriTime, highScoreTxt,sumMogra,sumHiyoko,hiyokoCountint
             ,highScoreTime,endMsg,endTxt,endScore,updateHighScoreTxt,nowStageTxt,nowStageInt
@@ -271,27 +272,27 @@ public class MainActivity extends AppCompatActivity {
         nowStage        = 0;
         tapCount        = 0;
 
-        //startGame       = false;
+//        startGame       = false;
         endGame         = true;
         moveOKMog       = false;
         mogAttack       = false;
-        ngMog           = false;
+        ngMog           = false;    // もぐら以外になるかどうか
         lastTimeMog     = false;
         updateHighScore = false;
         stopMog         = false;
         mogContinue     = false;
-        flyingBird      = false;
-        birdTap         = false;
-        firstGame       = true;
+        flyingBird      = false;    // 青い鳥がアニメーション中か
+        birdTap         = false;    // 青い鳥がタップされたか
+        firstGame       = true;     // ステージ1から始めて1回目のプレイか
         endOKMog        = false;
         startOKMog      = true;
-        tutorialOn      = true;
+//        tutorialOn      = true;
         startGame       = false;
         gameRetry       = false;
-        resulting       = false;
+        resulting       = false;    // 結果画面表示中に操作させない
         endingNow       = false;
-        onceEnd         = true;
-        gameover        = true;
+        onceEnd         = true;     // 2回以上EndGame()関数が実行しないように
+        gameover        = true;     // 初期画面:true プレイ中:false
         resetStage      = false;
 
         //
@@ -308,8 +309,8 @@ public class MainActivity extends AppCompatActivity {
         minus           = new TextView(this);
         hiyokoCountTxt  = new TextView(this);
         hiyokoCountint  = new TextView(this);
-        //hiyokoSlash     = new TextView(this);
-        //sumHiyoko       = new TextView(this);
+//        hiyokoSlash     = new TextView(this);
+//        sumHiyoko       = new TextView(this);
         hiScoreTxtV     = new TextView(this);
         highScoreTxt    = new TextView(this);
         highScoreTime   = new TextView(this);
@@ -326,12 +327,12 @@ public class MainActivity extends AppCompatActivity {
         slash.setText("/");
         minus.setText("-");
         hiyokoCountTxt.setText("Miss:");
-        //hiyokoSlash.setText("/");
-        //sumHiyoko.setText("0");
+//        hiyokoSlash.setText("/");
+//        sumHiyoko.setText("0");
         hiScoreTxtV.setText("HighScore:");
         highScoreTxt.setText(String.format("%03d", 0));
         highScoreTime.setText(String.format("%03d", 0));
-        //Log.d("CREATE_TAG","\nFormat:" + highScoreDateFormat.format(highScoreDate.getTime()));
+//        Log.d("CREATE_TAG","\nFormat:" + highScoreDateFormat.format(highScoreDate.getTime()));
         nokoriTxtV.setText("Time:");
         nowStageTxt.setText("ステージ");
         nowStageInt.setText("0");
@@ -348,9 +349,9 @@ public class MainActivity extends AppCompatActivity {
         hiyokoCountTxt.setTextSize(20);
         hiyokoCountint.setTextSize(20);
         hiyokoCountint.setTextColor(Color.RED);
-        //hiyokoSlash.setTextSize(30);
-        //sumHiyoko.setTextSize(30);
-        //sumHiyoko.setTextColor(Color.RED);
+//        hiyokoSlash.setTextSize(30);
+//        sumHiyoko.setTextSize(30);
+//        sumHiyoko.setTextColor(Color.RED);
         hiScoreTxtV.setTextSize(20);
         highScoreTxt.setTextSize(20);
         highScoreTime.setTextSize(20);
@@ -401,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
         scoreTxtParam.setMargins        (left       ,top  , 0,  0);
         scoreParam.setMargins           (paramPoint ,top  , 0,  0);
         sumMograParam.setMargins        (center - 30 ,top  , 0,  0);
-        slashParam.setMargins           (center - dpToPx(30) ,top  , 0,  0);
+        slashParam.setMargins           (center - 55 ,top  , 0,  0);
         minusParam.setMargins           (paramPoint - dpToPx(20) - 60 ,top2,0,0);
         hiyokoCountParam.setMargins     (left ,top2 , 0,  0);
         hiyokoCountintParam.setMargins  (paramPoint - dpToPx(15) - 60 ,top2 , 0,  0);
@@ -413,8 +414,8 @@ public class MainActivity extends AppCompatActivity {
         nowStageTxtParam.setMargins     (left, top3 - 50,0,0);
         nowStageIntParam.setMargins     (paramPoint2 - 80, top3 - 50, 0, 0);
         nowCondiNumParam.setMargins     (center - 100 , top3 - 50, 0, 0);
-        condiSlashParam.setMargins      (center            , top3 - 50, 0, 0);
-        condiNumParam.setMargins        (center + 30  , top3 - 50, 0, 0);
+        condiSlashParam.setMargins      (center + 20            , top3 - 50, 0, 0);
+        condiNumParam.setMargins        (center + 50  , top3 - 50, 0, 0);
         clearTxtParam.setMargins        (center + 150  , top3 - 50, 0, 0);
 
         happyIcon.setLayoutParams(happyIconParam);
@@ -482,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 //ボタンタップ時の処理
                 if(mogNumAdmin.stage == 1){
-                    backTopBtn.setEnabled(false);
+                    backTopBtn.setText("ゲーム終了");
                 }
                 stopMog = true;
                 updateHighScore = false;
@@ -640,7 +641,7 @@ public class MainActivity extends AppCompatActivity {
         tutorialText          = new TextView(this);
         tutorialText2         = new TextView(this);
         tutorialCheckText     = new TextView(this);
-        touchPleaseTxt        = new TextView(this);
+//        touchPleaseTxt        = new TextView(this);
         ngTutTxt              = new TextView(this);
         ngTutTxt2             = new TextView(this);
 
@@ -654,7 +655,7 @@ public class MainActivity extends AppCompatActivity {
         tutorialText.setText("タップしよう！！");
         tutorialText2.setText("を");
         tutorialCheckText.setText("チュートリアルを表示しない");
-        touchPleaseTxt.setText("画面をタップしてスタート！");
+//        touchPleaseTxt.setText("画面をタップしてスタート！");
         ngTutTxt.setText("は");
         ngTutTxt2.setText("タップしない！");
 
@@ -668,7 +669,7 @@ public class MainActivity extends AppCompatActivity {
         tutorialText.setTextSize(35);
         tutorialText2.setTextSize(35);
         tutorialCheckText.setTextSize(20);
-        touchPleaseTxt.setTextSize(30);
+//        touchPleaseTxt.setTextSize(30);
         ngTutTxt.setTextSize(35);
         ngTutTxt2.setTextSize(35);
 
@@ -682,7 +683,7 @@ public class MainActivity extends AppCompatActivity {
         tutorialText.setTextColor(whiteColor);
         tutorialText2.setTextColor(whiteColor);
         tutorialCheckText.setTextColor(whiteColor);
-        touchPleaseTxt.setTextColor(whiteColor);
+//        touchPleaseTxt.setTextColor(whiteColor);
         ngTutTxt.setTextColor(whiteColor);
         ngTutTxt2.setTextColor(Color.RED);
 
@@ -780,12 +781,12 @@ public class MainActivity extends AppCompatActivity {
         //Resultボタン
         backTopBtn   = new Button(this);
         nextStageBtn = new Button(this);
-        backTopBtn.setText("やめる");
+        backTopBtn.setText("ゲーム終了");
         nextStageBtn.setText("次ステージへ");
 
         int buttonHeight = 250;
         int buttonWidth  = windowWidth / 2;
-        RelativeLayout.LayoutParams backTopBtnParam = new RelativeLayout.LayoutParams(buttonWidth, buttonHeight);
+        final RelativeLayout.LayoutParams backTopBtnParam = new RelativeLayout.LayoutParams(buttonWidth, buttonHeight);
         RelativeLayout.LayoutParams nextStageBtnParam = new RelativeLayout.LayoutParams(buttonWidth, buttonHeight);
 
 //        backTopBtnParam.setMargins(0,1000 ,0 ,0);
@@ -800,27 +801,34 @@ public class MainActivity extends AppCompatActivity {
         backTopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                gameTimer.cancel();
-                animLayout.setAlpha(1.0f);
-                startGame = false;
-                mogContinue = false;
-                firstGame = true;
-                onceEnd   = true;
-                stageTxt.setText("ステージ1");
-                resultLayout.setAlpha(0.0f);
-                nextStageBtn.setText("ゲーム開始");
-                nextStageBtn.setEnabled(true);
-                backTopBtn.setEnabled(false);
-                initZeroTextView();
-                mogNumAdmin.stage = 1;
-                setTutorialImage(1);
-                gameover = true;
-                resultLayout.setAlpha(0.0f);
-                animLayout.setAlpha(1.0f);
-                clearText.setText(bou + "ゲームリセット");
-                resulting = true;
-                endOKMog = true;
-                gameEndAnim.start();
+                if(!gameover){
+                    gameTimer.cancel();
+                    animLayout.setAlpha(1.0f);
+                    startGame = false;
+                    mogContinue = false;
+                    firstGame = true;
+                    onceEnd   = true;
+                    stageTxt.setText("ステージ1");
+                    resultLayout.setAlpha(0.0f);
+                    nextStageBtn.setText("ゲーム開始");
+                    nextStageBtn.setEnabled(true);
+//                backTopBtn.setEnabled(false);
+                    backTopBtn.setText("ゲーム終了");
+                    initZeroTextView();
+                    mogNumAdmin.stage = 1;
+                    setTutorialImage(1);
+                    gameover = true;
+                    resultLayout.setAlpha(0.0f);
+                    animLayout.setAlpha(1.0f);
+                    clearText.setText(bou + "ゲームリセット");
+                    discript.setText(clearScore[0] + "点以上で");
+                    resulting = true;
+                    endOKMog = true;
+                    gameEndAnim.start();
+                }else{
+                    DialogFragment endDialog = new GameEndDialogClass();
+                    endDialog.show(getSupportFragmentManager(), "GameEnd");
+                }
             }
         });
 
@@ -910,7 +918,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(relativeLayout);
 
         resultLayout.setAlpha(1.0f);
-        backTopBtn.setEnabled(false);
+//        backTopBtn.setEnabled(false);
         nextStageBtn.setText("ゲーム開始");
         endMsg.setText("");
         updateHighScoreTxt.setText("");
@@ -961,6 +969,7 @@ public class MainActivity extends AppCompatActivity {
         relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
+                //アニメーション設定
                 int[] dotP = new int[2];
                 int[] dotP2 = new int[2];
                 int[] tutTxtP = new int[2];
@@ -1029,6 +1038,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         nextStageBtn.setEnabled(true);
+                        backTopBtn.setEnabled(true);
                     }
                 });
                 tutUp.play(dotUpAnim).with(tutImgUpAnim).with(dot2UpAnim).with(tutImg2UpAnim).with(tutTxtUpAnim).with(tutTxtUp2Anim).with(ngTutAlphaAnim).with(ngTut2AlphaAnim).with(ngTuImgAlphaAnim).with(ngTuDotAlphaAnim).with(ngDotDnAnim).with(ngTutImgDnAnim).with(ngTutTxtDnAnim).with(ngTutTxtDn2Anim);
@@ -1060,6 +1070,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         nextStageBtn.setEnabled(true);
+                        backTopBtn.setEnabled(true);
                     }
                 });
                 tutDn.play(dotDnAnim).with(tutImgDnAnim).with(dot2DnAnim).with(tutImg2DnAnim).with(tutTxtDnAnim).with(tutTxtDn2Anim);//.with(ngTutAlphaEnAnim).with(ngTut2AlphaEnAnim).with(ngTuImgAlphaEnAnim).with(ngTuDotAlphaEnAnim);
@@ -1087,6 +1098,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("ResetButton","reset record");
         SharedPreferences.Editor updateGameData = gameData.edit();
         updateGameData.putInt("HIGH_SCORE", 0);
+        updateGameData.putInt("HIGH_STAGE", 0);
         updateGameData.putString("UPDATE", "");
         updateGameData.apply();
         sharedHighScore = 0;
@@ -1553,6 +1565,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void happyIconAnim(){
+        //プレイ中のハイスコア更新したときの祝アイコン表示
         if(!endGame){
             happyIcon.setAlpha(1.0f);
         }else if(endGame){
@@ -1568,6 +1581,7 @@ public class MainActivity extends AppCompatActivity {
 //        discript.setAlpha(0.0f);
 //        tutorialText.setAlpha(0.0f);
 //        discriptionImage.setAlpha(0.0f);
+        //中断しないでハイスコアの場合記録
         updateHighScoreTxt.setAlpha(1.0f);
         String addHigh = "";
         if(updateHighScore && !stopMog){
@@ -1585,6 +1599,7 @@ public class MainActivity extends AppCompatActivity {
         }else{
             updateHighScoreTxt.setText("");
         }
+        //プレイステージの数値を初期化
         mogNumAdmin.attackHiyokoReset();
         attackFlagAllOff();
         resetCoolTime();
@@ -1609,7 +1624,7 @@ public class MainActivity extends AppCompatActivity {
         float alphaNum = 0.0f;
         String setClearText = "";
         if(stopMog){
-            //中断した場合
+            //中断した場合のパーツ内容変更
 //            endMsg.setText("中断");
             setClearText = bou + "中断";
             nextStageBtn.setText("再プレイ");
@@ -1618,25 +1633,30 @@ public class MainActivity extends AppCompatActivity {
             nowStageInt.setText("0");
             highScoreTxt.setText(String.format("%03d", recordScore));
             highScoreTxt.setTextColor(Color.BLACK);
+            backTopBtn.setText("やめる");
             happyIconAnim();
             alphaNum = 0.0f;
             updateHighScore = false;
         }else if(intScore >= clearMog){
+            //ノルマクリアした場合
             mogContinue = false;
 //            endMsg.setText("クリアー！");
             setClearText = bou + "クリアー！";
             nextStageBtn.setText("次ステージへ");
-            nextStageBtn.setEnabled(true);
+//            nextStageBtn.setEnabled(true);
+            backTopBtn.setText("やめる");
             alphaNum = 1.0f;
             mogNumAdmin.stage += 1;
         }else{
+            //ノルマをクリアできなかった場合
 //            endMsg.setText("ゲームオーバー");
             setClearText = bou + "ゲームオーバー";
             nextStageBtn.setText("再プレイ");
             alphaNum = 0.0f;
             mogContinue = true;
             firstGame = true;
-            backTopBtn.setEnabled(false);
+//            backTopBtn.setEnabled(false);
+            backTopBtn.setText("ゲーム終了");
             mogNumAdmin.stage = 1;
         }
 //        discript.setAlpha(alphaNum);
@@ -1647,23 +1667,30 @@ public class MainActivity extends AppCompatActivity {
 //        dotImg2.setAlpha(alphaNum);
 //        tutorialText.setAlpha(alphaNum);
 //        tutorialText2.setAlpha(alphaNum);
+        if(mogNumAdmin.stage == 1){
+            //ステージ1の場合初期状態にする
+            backTopBtn.setText("ゲーム終了");
+            gameover = true;
+        }
         int nextStage = mogNumAdmin.stage -1;
         if(mogNumAdmin.stage > 3){
+            //ステージ4以上の場合スコアをエンドレスに加算していく
             if(mogNumAdmin.stage == 4){
                 dotImg3.setAlpha(0.0F);
                 discriptionImage3.setAlpha(0.0f);
                 ngTutTxt.setAlpha(0.0f);
                 ngTutTxt2.setAlpha(0.0f);
             }
-            nextStage = 3;
-            nextClearScore += 20;
+            nextClearScore += 50;
             discript.setText(nextClearScore + "点以上で");
         }else{
             discript.setText(clearScore[nextStage] + "点以上で");
             nextClearScore = clearScore[nextStage];
         }
+        // addHigh : ハイスコアが更新の場合表示
         clearText.setText(setClearText + "\n" + addHigh);
         stageTxt.setText("ステージ" + mogNumAdmin.stage);
+        //ステージが4以上の場合ステージ4のチュートリアル画面を表示
         if(mogNumAdmin.stage < 5){
             setTutorialImage(mogNumAdmin.stage);
         }else{
@@ -1691,12 +1718,6 @@ public class MainActivity extends AppCompatActivity {
     {
         float d = screenDensity;
         return (int)((px * d) + 0.5);
-    }
-
-    private float dpToPx(float px)
-    {
-        float d = screenDensity;
-        return (float)((px / d) * 0.5);
     }
 
     @Override
@@ -1733,6 +1754,7 @@ public class MainActivity extends AppCompatActivity {
                                 tutDn.start();
                             }else{
                                 nextStageBtn.setEnabled(true);
+                                backTopBtn.setEnabled(true);
                             }
                         }
                     });
@@ -1743,9 +1765,6 @@ public class MainActivity extends AppCompatActivity {
                         ngTutTxt.setAlpha(0.0f);
                         ngTutTxt2.setAlpha(0.0f);
                         tutDn.start();
-                        backTopBtn.setEnabled(false);
-                    }else{
-                        backTopBtn.setEnabled(true);
                     }
                 }
 //                else if(endOKMog){
@@ -1808,7 +1827,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void mogTouchPoint(float touchX, float touchY, int mode){
-        //Modeは １：モグラ ２：ハンマー
+        //Modeは １：モグラ ２：死神
         /* upPointMog:モグラ部分の一番上のY座標
          * underPointMog:モグラ部分の一番下のY座標
          * left1PointMog: 左モグラの右端X座標
@@ -1863,6 +1882,7 @@ public class MainActivity extends AppCompatActivity {
                             ,MogUpDnCanvas centerMogCanvas, boolean centerNgMog
                             ,MogUpDnCanvas rightMogCanvas,  boolean rightNgMog
                             ,float touchX){
+        //モグラを叩いたときの動作
         if(touchX < left1PointMog){
             //左モグラ
             if (!leftMogCanvas.checkAttackFlag()){
@@ -1885,6 +1905,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void touchAction(HummerCanvas left, HummerCanvas center, HummerCanvas right, float touchX){
+        //死神をスワイプしたときの動作
         if(touchX < left1PointMog) {
             left.swipeAnim();
         }else if(left1PointMog < touchX && touchX < left2PointMog){
@@ -1901,5 +1922,19 @@ public class MainActivity extends AppCompatActivity {
         //mograCanvas.hummerAnim(touchX,touchY);
     }
 
+    @Override
+    public  boolean onKeyDown(int keyCode, KeyEvent event){
+        switch(keyCode){
+            case KeyEvent.KEYCODE_BACK:
+                //スマホの戻るボタンを押下した場合ゲームを終了するか確認
+                DialogFragment dialog = new GameEndDialogClass();
+                dialog.show(getSupportFragmentManager(),"GameEnd");
+        }
 
+        return true;
+    }
+
+    public void endMogratataki(){
+        this.finish();
+    }
 }
