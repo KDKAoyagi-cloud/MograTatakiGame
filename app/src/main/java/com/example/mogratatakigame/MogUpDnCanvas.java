@@ -7,8 +7,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Build;
 import android.util.Log;
 import android.view.View;
+
+import androidx.annotation.RequiresApi;
 
 import java.util.Random;
 
@@ -22,11 +25,12 @@ public class MogUpDnCanvas extends View {
             ,outThingBit;
     private Paint paint;
     private ObjectAnimator mogAni;
-    private float leftMog,topMog;
     private int mograHeight;
+    private float leftMog,topMog;
     private boolean ngMog,upMog,attackMogra,coolTime,goldMogra,lemmMog,tenMog;
 
-    public MogUpDnCanvas(Context context, ShowMsgCanvas cnvShowMsgCanvas,MogNumAdmin canMogNumAdmin,HummerCanvas conHummerCanvas){
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public MogUpDnCanvas(Context context, ShowMsgCanvas cnvShowMsgCanvas, MogNumAdmin canMogNumAdmin, HummerCanvas conHummerCanvas){
         super(context);
 
         paint = new Paint();
@@ -126,6 +130,7 @@ public class MogUpDnCanvas extends View {
 
         int sendScore = 0;
         int sendHiyoko = 0;
+        int sendMode = 4;
         float fromY = 90.0f;
         float toY   = 90.0f;
 
@@ -160,6 +165,7 @@ public class MogUpDnCanvas extends View {
                     sendScore = -10;
                     sendHiyoko = 10;
                     showMsgCanvas.msgType(0);
+                    sendMode = 3;
                 }
             }else{
                 //モグラの場合
@@ -171,7 +177,11 @@ public class MogUpDnCanvas extends View {
         mogAni.setDuration(300);
         mogAni.start();
 
-        mogNumAdmin.scoreAddOrCut(sendScore);
+        if(mogTap){
+            mogNumAdmin.scoreAddOrCut(sendScore,sendMode);
+        }else{
+            mogNumAdmin.scoreAddOrCut(sendScore);
+        }
         mogNumAdmin.attackHiyokoCountAddOrCut(sendHiyoko);
         if(type == "up"){ upMog = true; }
         else{

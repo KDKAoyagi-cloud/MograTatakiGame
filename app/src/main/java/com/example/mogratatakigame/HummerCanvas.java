@@ -107,6 +107,7 @@ public class HummerCanvas extends View {
         if(attack){
             this.setAlpha(1.0f);
             attack = false;
+            mogNumAdmin.scoreAddOrCut(0,7);
             animatorSet.start();
         }
     }
@@ -117,7 +118,7 @@ public class HummerCanvas extends View {
             attack = true;
             endAnimSet.start();
             showMsgCanvas.msgType(1);
-            mogNumAdmin.scoreAddOrCut(50);
+            mogNumAdmin.scoreAddOrCut(50,8);
             mogNumAdmin.mograCountAddOrCut(5);
         }
     }
@@ -142,7 +143,7 @@ public class HummerCanvas extends View {
             endHum();
             showMsgCanvas.msgType(msgType);
             attack = true;
-            mogNumAdmin.scoreAddOrCut(-50);
+            mogNumAdmin.scoreAddOrCut(-50,9);
             mogNumAdmin.attackHiyokoCountAddOrCut(50);
         }
     }

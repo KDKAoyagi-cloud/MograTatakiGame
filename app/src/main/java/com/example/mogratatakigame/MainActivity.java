@@ -9,6 +9,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.media.AudioAttributes;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -83,16 +86,20 @@ public class MainActivity extends AppCompatActivity {
     private TouchCanvas touchCanvas;
     private CheckBox checkBox;
     private AnimatorSet gameEndAnim,endAlphaAnim,tutUp,tutDn;
+    private SoundPool soundPool;
+    private MediaPlayer BGMPlayer;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @SuppressLint({"ResourceType", "ClickableViewAccessibility"})
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(R.style.AppTheme);
         //setContentView(R.layout.activity_main);
 
+        //最適化できるところ多いと思います xmlは使わず殆ど動的に生成しています
         //縦画面固定(横の場合ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         int bRed,bGreen,bBlue;
         bRed   = 173;
@@ -131,7 +138,39 @@ public class MainActivity extends AppCompatActivity {
         flyBird.setLayoutParams(flyBirdParam);
         flyBird.setAlpha(0.0f);
 
+//        AssetFileDescriptor assetFileDescriptor = getAssets().openFd("cat_life");
+
+        AudioAttributes audioAttributes = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            audioAttributes = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
+            soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).setMaxStreams(2).build();
+        }
+        int buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound;
+        //ボタン音
+        buttonSound = soundPool.load(this,R.raw.button_sound,1);
+        //中断の音
+        stopSound = soundPool.load(this,R.raw.break_sound,1);
+        //クリアの音
+        clearSound = soundPool.load(this,R.raw.clear_sound,1);
+        //ひよこの音
+        hiyokoSound = soundPool.load(this,R.raw.hiyoko_sound,1);
+        //モグラの音
+        attackSound = soundPool.load(this,R.raw.attack_sound,1);
+        //鳥の音
+        birdVoiceSound = soundPool.load(this,R.raw.bird_voice_sound,1);
+        birdPaperSound = soundPool.load(this,R.raw.bird_paper_sound,1);
+        //死神の音
+        deathSpawnSound = soundPool.load(this,R.raw.death_spawn_sound,1);
+        deathSwipeSound = soundPool.load(this,R.raw.death_swipe_sound,1);
+        deathVanishSound = soundPool.load(this,R.raw.death_vanish_sound,1);
+        gameoverSound = soundPool.load(this,R.raw.gameover_sound,1);
+        int[] sounds = {buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound};
+
         mogNumAdmin         = new MogNumAdmin();
+
+        mogNumAdmin.setSound(soundPool, sounds);
 
         DisplayMetrics mogDisplayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(mogDisplayMetrics);
@@ -168,15 +207,17 @@ public class MainActivity extends AppCompatActivity {
                                                 new HummerCanvas(this,mogNumAdmin,showMsgCanvas[6]),
                                                 new HummerCanvas(this,mogNumAdmin,showMsgCanvas[7]),
                                                 new HummerCanvas(this,mogNumAdmin,showMsgCanvas[8]) };
-        mogUpDnCanvas   = new MogUpDnCanvas[]{  new MogUpDnCanvas(this,showMsgCanvas[0],mogNumAdmin,hummerCanvas[0]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[1],mogNumAdmin,hummerCanvas[1]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[2],mogNumAdmin,hummerCanvas[2]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[3],mogNumAdmin,hummerCanvas[3]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[4],mogNumAdmin,hummerCanvas[4]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[5],mogNumAdmin,hummerCanvas[5]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[6],mogNumAdmin,hummerCanvas[6]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[7],mogNumAdmin,hummerCanvas[7]),
-                                                new MogUpDnCanvas(this,showMsgCanvas[8],mogNumAdmin,hummerCanvas[8]) };
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mogUpDnCanvas   = new MogUpDnCanvas[]{  new MogUpDnCanvas(this,showMsgCanvas[0],mogNumAdmin,hummerCanvas[0]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[1],mogNumAdmin,hummerCanvas[1]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[2],mogNumAdmin,hummerCanvas[2]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[3],mogNumAdmin,hummerCanvas[3]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[4],mogNumAdmin,hummerCanvas[4]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[5],mogNumAdmin,hummerCanvas[5]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[6],mogNumAdmin,hummerCanvas[6]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[7],mogNumAdmin,hummerCanvas[7]),
+                                                    new MogUpDnCanvas(this,showMsgCanvas[8],mogNumAdmin,hummerCanvas[8]) };
+        }
         Log.d("onCreate","Length\nDnHd:" + DnHd.length + "\nShowMsgCanvas:" + showMsgCanvas.length + "\nHummerCanvas:" + hummerCanvas.length + "\nMogUpDnCanvas:" + mogUpDnCanvas.length);
         mograCountNum       = mogUpDnCanvas.length;
 
@@ -244,6 +285,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
 
 //        gameMograTime       = new int[(int)setTime / 10];
 //        gameHiyokoTime      = new int[(int)setTime / 10];
@@ -335,7 +378,7 @@ public class MainActivity extends AppCompatActivity {
 //        Log.d("CREATE_TAG","\nFormat:" + highScoreDateFormat.format(highScoreDate.getTime()));
         nokoriTxtV.setText("Time:");
         nowStageTxt.setText("ステージ");
-        nowStageInt.setText("0");
+        nowStageInt.setText("0"); //画面左上の表示
         condiSlash.setText("/");
         clearTxt.setText("OK!");
         initZeroTextView();
@@ -481,6 +524,7 @@ public class MainActivity extends AppCompatActivity {
         stopGameBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mogNumAdmin.scoreAddOrCut(0,0);
                 //ボタンタップ時の処理
                 if(mogNumAdmin.stage == 1){
                     backTopBtn.setText("ゲーム終了");
@@ -801,13 +845,16 @@ public class MainActivity extends AppCompatActivity {
         backTopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mogNumAdmin.scoreAddOrCut(0,0);
                 if(!gameover){
+                    //やめるボタン
                     gameTimer.cancel();
                     animLayout.setAlpha(1.0f);
                     startGame = false;
                     mogContinue = false;
                     firstGame = true;
                     onceEnd   = true;
+                    nowStageInt.setText("1");
                     stageTxt.setText("ステージ1");
                     resultLayout.setAlpha(0.0f);
                     nextStageBtn.setText("ゲーム開始");
@@ -826,6 +873,8 @@ public class MainActivity extends AppCompatActivity {
                     endOKMog = true;
                     gameEndAnim.start();
                 }else{
+//                    soundPool.play(pikoSound,1.0f,1.0f,0,0,1);
+                    //ゲーム終了ボタン
                     DialogFragment endDialog = new GameEndDialogClass();
                     endDialog.show(getSupportFragmentManager(), "GameEnd");
                 }
@@ -837,6 +886,7 @@ public class MainActivity extends AppCompatActivity {
         nextStageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mogNumAdmin.scoreAddOrCut(0,0);
                 if(!resulting){
                     onceEnd = true;
                     if(endGame && firstGame){
@@ -1377,6 +1427,7 @@ public class MainActivity extends AppCompatActivity {
             mogAllDown();
             resetUpDn();
         }
+        nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
         nowStage = mogNumAdmin.stage;
         startSystemTime = System.currentTimeMillis();
             //0.1秒ごとに実行する
@@ -1625,6 +1676,7 @@ public class MainActivity extends AppCompatActivity {
         String setClearText = "";
         if(stopMog){
             //中断した場合のパーツ内容変更
+            mogNumAdmin.scoreAddOrCut(0,1);
 //            endMsg.setText("中断");
             setClearText = bou + "中断";
             nextStageBtn.setText("再プレイ");
@@ -1639,6 +1691,7 @@ public class MainActivity extends AppCompatActivity {
             updateHighScore = false;
         }else if(intScore >= clearMog){
             //ノルマクリアした場合
+            mogNumAdmin.scoreAddOrCut(0,2);
             mogContinue = false;
 //            endMsg.setText("クリアー！");
             setClearText = bou + "クリアー！";
@@ -1649,6 +1702,7 @@ public class MainActivity extends AppCompatActivity {
             mogNumAdmin.stage += 1;
         }else{
             //ノルマをクリアできなかった場合
+            mogNumAdmin.scoreAddOrCut(0,10);
 //            endMsg.setText("ゲームオーバー");
             setClearText = bou + "ゲームオーバー";
             nextStageBtn.setText("再プレイ");
@@ -1839,7 +1893,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("Bird","BirdTouched");
             showMsgCanvas[9].setMsgPoint(touchX,touchY);
             showMsgCanvas[9].msgType(1);
-            mogNumAdmin.scoreAddOrCut(20);
+            mogNumAdmin.scoreAddOrCut(20,5,6);
             birdTap = true;
         }else if( upPointMog < touchY && touchY < underPointMog ){
             //モグラのタップ範囲かを判定

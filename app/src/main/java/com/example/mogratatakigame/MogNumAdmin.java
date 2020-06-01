@@ -1,5 +1,6 @@
 package com.example.mogratatakigame;
 
+import android.media.SoundPool;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -8,6 +9,8 @@ public class MogNumAdmin extends AppCompatActivity {
 
     private int sendScore,attackHiyoko,mograCount,hiyokoCount;
     private float screenDensity;
+    private SoundPool soundPool;
+    private int[] sounds;
     public int stage;
 
     @Override
@@ -21,6 +24,7 @@ public class MogNumAdmin extends AppCompatActivity {
         hiyokoCount  = 0;
         stage        = 1;
 
+        soundPool = null;
     }
 
     //スコア
@@ -29,6 +33,53 @@ public class MogNumAdmin extends AppCompatActivity {
             //スコアをマイナスにしないため何もしない
         }else{
             sendScore += scoreNum;
+        }
+    }
+
+    public void scoreAddOrCut(int scoreNum,int soundNum){
+        /*
+         * モード
+         * 0 ボタン音
+         * 1 中断
+         * 2 クリア音
+         * 3 ひよこ
+         * 4 モグラ
+         * 5 青い鳥(鳴声)
+         * 6 青い鳥(紙音)
+         * 7 死神(出現)
+         * 8 死神(スワイプ)
+         * 9 死神(消失)
+         * 10 ゲームオーバー
+         */
+        if(scoreNum < 0 && sendScore == 0){
+            //スコアをマイナスにしないため何もしない
+        }else{
+            sendScore += scoreNum;
+            if(soundPool != null){
+                int playSound = 0;
+                playSound = sounds[soundNum];
+                if(playSound != 0){
+                    soundPool.play(playSound,1.0f,1.0f,0,0,1);
+                }
+            }
+        }
+    }
+
+    public void scoreAddOrCut(int scoreNum,int soundNum,int soundNum2){
+        if(scoreNum < 0 && sendScore == 0){
+            //スコアをマイナスにしないため何もしない
+        }else{
+            sendScore += scoreNum;
+            if(soundPool != null){
+                int playSound = 0;
+                int playSound2 = 0;
+                playSound = sounds[soundNum];
+                playSound2 = sounds[soundNum2];
+                if(playSound != 0 && playSound2 != 0){
+                    soundPool.play(playSound,1.0f,1.0f,0,0,1);
+                    soundPool.play(playSound2,1.0f,1.0f,0,0,1);
+                }
+            }
         }
     }
 
@@ -68,5 +119,8 @@ public class MogNumAdmin extends AppCompatActivity {
         return (int)((px * d) + 0.5);
     }
 
-
+    public void setSound(SoundPool mograSoundPool, int[] gameSounds){
+        soundPool = mograSoundPool;
+        sounds = gameSounds;
+    }
 }
