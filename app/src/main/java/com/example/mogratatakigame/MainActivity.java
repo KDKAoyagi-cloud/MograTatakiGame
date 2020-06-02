@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         bGreen = 179;
         bBlue  = 255;
         int backgroundColor = Color.rgb(bRed, bGreen, bBlue);
+        //鳥の高さ
         birdTopPoint = 200;
 
         //部品初期化
@@ -147,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
             soundPool = new SoundPool.Builder().setAudioAttributes(audioAttributes).setMaxStreams(2).build();
         }
-        int buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound;
+        int buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound,startSound;
         //ボタン音
         buttonSound = soundPool.load(this,R.raw.button_sound,1);
         //中断の音
@@ -166,7 +167,8 @@ public class MainActivity extends AppCompatActivity {
         deathSwipeSound = soundPool.load(this,R.raw.death_swipe_sound,1);
         deathVanishSound = soundPool.load(this,R.raw.death_vanish_sound,1);
         gameoverSound = soundPool.load(this,R.raw.gameover_sound,1);
-        int[] sounds = {buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound};
+        startSound = soundPool.load(this,R.raw.start_sound,1);
+        int[] sounds = {buttonSound,stopSound,clearSound,hiyokoSound,attackSound,birdVoiceSound,birdPaperSound,deathSpawnSound,deathSwipeSound,deathVanishSound,gameoverSound,startSound};
 
         mogNumAdmin         = new MogNumAdmin();
 
@@ -223,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
 
         clearMog            = 250;
 
-        setTime             = 32.0;
+        setTime             = 33.0; //残り時間(ボタン押してからの時間も含める)
         countdownTime       = setTime;
         timeFormat          = new DecimalFormat("0.0");
 
@@ -1377,6 +1379,7 @@ public class MainActivity extends AppCompatActivity {
             int scoreNum = mogNumAdmin.stage - 1;
             clearMog = clearScore[scoreNum];
         }else{
+            //ステージ5以降はノルマを延々増やしていく
             clearMog += 30;
         }
         discript.setAlpha(1.0f);
@@ -1410,7 +1413,7 @@ public class MainActivity extends AppCompatActivity {
                     stopGameBtn.setEnabled(true);
                 }
             }
-        }, 2000);
+        }, 3000);
 
         resetScoreBtn.setEnabled(false);
         startMogGameBtn.setEnabled(false);
@@ -1427,6 +1430,7 @@ public class MainActivity extends AppCompatActivity {
             mogAllDown();
             resetUpDn();
         }
+        mogNumAdmin.scoreAddOrCut(0,11);
         nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
         nowStage = mogNumAdmin.stage;
         startSystemTime = System.currentTimeMillis();
@@ -1478,7 +1482,7 @@ public class MainActivity extends AppCompatActivity {
                         nowHiyokoNum += beforeCountHiyo;
                     }
                      */
-                        if (timeCount != 0 && timeCount != 10) {
+                        if (timeCount != 0 && timeCount != 10 && timeCount != 20) {
                             //Log.d("DEBUG_TAG","RandomStart_normal");
                             randomMog();
                         }
@@ -1510,7 +1514,8 @@ public class MainActivity extends AppCompatActivity {
                             endGame();
                         }
                     } else {
-                        if(timeCount > 20){
+                        if(timeCount > 30){
+                            //3秒はタイムを表示させない
                             nokoriTime.setText(timeFormat.format(nowGameTime));
                         }
                     }

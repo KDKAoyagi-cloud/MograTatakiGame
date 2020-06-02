@@ -50,6 +50,7 @@ public class MogNumAdmin extends AppCompatActivity {
          * 8 死神(スワイプ)
          * 9 死神(消失)
          * 10 ゲームオーバー
+         * 11 ゲームスタート
          */
         if(scoreNum < 0 && sendScore == 0){
             //スコアをマイナスにしないため何もしない
