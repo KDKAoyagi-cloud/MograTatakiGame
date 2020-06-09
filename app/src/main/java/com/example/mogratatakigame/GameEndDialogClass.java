@@ -10,7 +10,6 @@ import androidx.fragment.app.DialogFragment;
 public class GameEndDialogClass extends DialogFragment {
 
     public String dialogMsg = "ゲームを終了しますか？";
-    private MogNumAdmin mogNumAdmin = new MogNumAdmin();
 
     @Override
     public Dialog onCreateDialog(Bundle bundle){
@@ -27,6 +26,8 @@ public class GameEndDialogClass extends DialogFragment {
         builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                MainActivity mainActivity = (MainActivity)getActivity();
+                mainActivity.playClickSound();
                 dismiss();
             }
         });

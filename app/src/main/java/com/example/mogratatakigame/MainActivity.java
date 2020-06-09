@@ -47,7 +47,7 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity {
     private boolean updateHighScore,mogAttack,moveOKMog;
     private boolean ngMog,lastTimeMog,endGame,stopMog,mogContinue,firstGame,endOKMog,startOKMog,tutorialOn;
-    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd,gameover,resetStage;
+    private boolean birdTap,flyingBird,swipeHum,gameRetry,startGame,resulting,endingNow,onceEnd,gameover,resetStage,endless;
     private boolean[] recordHiyoko = {false, false, false, false, false, false, false, false, false};
     private boolean[] spawnHum     = {false, false, false, false, false, false, false, false, false};
     private String bou = "| ";
@@ -339,6 +339,7 @@ public class MainActivity extends AppCompatActivity {
         onceEnd         = true;     // 2回以上EndGame()関数が実行しないように
         gameover        = true;     // 初期画面:true プレイ中:false
         resetStage      = false;
+        endless         = false;
 
         //
         // スコアパーツ部分
@@ -526,7 +527,7 @@ public class MainActivity extends AppCompatActivity {
         stopGameBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mogNumAdmin.scoreAddOrCut(0,0);
+//                playClickSound();
                 //ボタンタップ時の処理
                 if(mogNumAdmin.stage == 1){
                     backTopBtn.setText("ゲーム終了");
@@ -847,13 +848,14 @@ public class MainActivity extends AppCompatActivity {
         backTopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mogNumAdmin.scoreAddOrCut(0,0);
+                playClickSound();
                 if(!gameover){
                     //やめるボタン
                     gameTimer.cancel();
                     animLayout.setAlpha(1.0f);
                     startGame = false;
                     mogContinue = false;
+                    endless = false;
                     firstGame = true;
                     onceEnd   = true;
                     nowStageInt.setText("1");
@@ -888,7 +890,7 @@ public class MainActivity extends AppCompatActivity {
         nextStageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mogNumAdmin.scoreAddOrCut(0,0);
+                playClickSound();
                 if(!resulting){
                     onceEnd = true;
                     if(endGame && firstGame){
@@ -901,6 +903,9 @@ public class MainActivity extends AppCompatActivity {
                         gameStart();
                     }else{
                         //次のステージ
+                        if(mogNumAdmin.stage == 4){
+                            endless = true;
+                        }
                         gameStart();
                     }
                 }
@@ -1368,6 +1373,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void gameStart() {
         gameover = false;
+        stopMog = false;
         tapCount = 0;
         if(firstGame){
             mogNumAdmin.stage = 1;
@@ -1378,7 +1384,7 @@ public class MainActivity extends AppCompatActivity {
         if (mogNumAdmin.stage < 5) {
             int scoreNum = mogNumAdmin.stage - 1;
             clearMog = clearScore[scoreNum];
-        }else{
+        }else if(!stopMog){
             //ステージ5以降はノルマを延々増やしていく
             clearMog += 30;
         }
@@ -1430,7 +1436,8 @@ public class MainActivity extends AppCompatActivity {
             mogAllDown();
             resetUpDn();
         }
-        mogNumAdmin.scoreAddOrCut(0,11);
+        mogNumAdmin.playSound(11);
+        mogNumAdmin.stage = 3;
         nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
         nowStage = mogNumAdmin.stage;
         startSystemTime = System.currentTimeMillis();
@@ -1681,11 +1688,11 @@ public class MainActivity extends AppCompatActivity {
         String setClearText = "";
         if(stopMog){
             //中断した場合のパーツ内容変更
-            mogNumAdmin.scoreAddOrCut(0,1);
+            mogNumAdmin.playSound(1);
 //            endMsg.setText("中断");
             setClearText = bou + "中断";
             nextStageBtn.setText("再プレイ");
-            stopMog = false;
+//            stopMog = false;
             mogContinue = true;
             nowStageInt.setText("0");
             highScoreTxt.setText(String.format("%03d", recordScore));
@@ -1696,7 +1703,7 @@ public class MainActivity extends AppCompatActivity {
             updateHighScore = false;
         }else if(intScore >= clearMog){
             //ノルマクリアした場合
-            mogNumAdmin.scoreAddOrCut(0,2);
+            mogNumAdmin.playSound(2);
             mogContinue = false;
 //            endMsg.setText("クリアー！");
             setClearText = bou + "クリアー！";
@@ -1707,7 +1714,7 @@ public class MainActivity extends AppCompatActivity {
             mogNumAdmin.stage += 1;
         }else{
             //ノルマをクリアできなかった場合
-            mogNumAdmin.scoreAddOrCut(0,10);
+            mogNumAdmin.playSound(10);
 //            endMsg.setText("ゲームオーバー");
             setClearText = bou + "ゲームオーバー";
             nextStageBtn.setText("再プレイ");
@@ -1732,16 +1739,22 @@ public class MainActivity extends AppCompatActivity {
             gameover = true;
         }
         int nextStage = mogNumAdmin.stage -1;
-        if(mogNumAdmin.stage > 3){
-            //ステージ4以上の場合スコアをエンドレスに加算していく
+        if(mogNumAdmin.stage > 4){
+            //ステージ5以上の場合スコアをエンドレスに加算していく
             if(mogNumAdmin.stage == 4){
                 dotImg3.setAlpha(0.0F);
                 discriptionImage3.setAlpha(0.0f);
                 ngTutTxt.setAlpha(0.0f);
                 ngTutTxt2.setAlpha(0.0f);
             }
-            nextClearScore += 50;
-            discript.setText(nextClearScore + "点以上で");
+//            nextClearScore += 30;
+            if(stopMog){
+                discript.setText(clearMog + "点以上で");
+                nextClearScore = clearMog;
+            }else{
+                discript.setText((clearMog += 30) + "点以上で");
+                nextClearScore = clearMog += 30;
+            }
         }else{
             discript.setText(clearScore[nextStage] + "点以上で");
             nextClearScore = clearScore[nextStage];
@@ -1809,7 +1822,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onAnimationEnd(Animator animation) {
                             if(mogNumAdmin.stage == 3) {
                                 tutUp.start();
-                            }else if(mogNumAdmin.stage == 4){
+                            }else if(mogNumAdmin.stage == 4 && !endless){
                                 tutDn.start();
                             }else{
                                 nextStageBtn.setEnabled(true);
@@ -1986,14 +1999,20 @@ public class MainActivity extends AppCompatActivity {
         switch(keyCode){
             case KeyEvent.KEYCODE_BACK:
                 //スマホの戻るボタンを押下した場合ゲームを終了するか確認
+                playClickSound();
                 DialogFragment dialog = new GameEndDialogClass();
                 dialog.show(getSupportFragmentManager(),"GameEnd");
         }
 
         return true;
     }
+    
+    public void playClickSound(){
+        mogNumAdmin.playSound(0);
+    }
 
     public void endMogratataki(){
+        playClickSound();
         this.finish();
     }
 }

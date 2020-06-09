@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MogNumAdmin extends AppCompatActivity {
 
-    private int sendScore,attackHiyoko,mograCount,hiyokoCount;
+    private int nowScore,attackHiyoko,mograCount,hiyokoCount;
     private float screenDensity;
     private SoundPool soundPool;
     private int[] sounds;
@@ -18,7 +18,7 @@ public class MogNumAdmin extends AppCompatActivity {
         super.onCreate(bundle);
 
         //作成時動作
-        sendScore    = 0;
+        nowScore    = 0;
         attackHiyoko = 0;
         mograCount   = 0;
         hiyokoCount  = 0;
@@ -29,10 +29,8 @@ public class MogNumAdmin extends AppCompatActivity {
 
     //スコア
     public void scoreAddOrCut(int scoreNum){
-        if(scoreNum < 0 && sendScore == 0){
-            //スコアをマイナスにしないため何もしない
-        }else{
-            sendScore += scoreNum;
+        if(scoreNum > 0 && nowScore + scoreNum > 0){
+            nowScore += scoreNum;
         }
     }
 
@@ -52,43 +50,35 @@ public class MogNumAdmin extends AppCompatActivity {
          * 10 ゲームオーバー
          * 11 ゲームスタート
          */
-        if(scoreNum < 0 && sendScore == 0){
-            //スコアをマイナスにしないため何もしない
-        }else{
-            sendScore += scoreNum;
-            if(soundPool != null){
-                int playSound = 0;
-                playSound = sounds[soundNum];
-                if(playSound != 0){
-                    soundPool.play(playSound,1.0f,1.0f,0,0,1);
-                }
-            }
+        if(scoreNum > 0 && nowScore + scoreNum > 0) {
+            nowScore += scoreNum;
         }
-    }
+        playSound(soundNum);
+        }
 
     public void scoreAddOrCut(int scoreNum,int soundNum,int soundNum2){
-        if(scoreNum < 0 && sendScore == 0){
-            //スコアをマイナスにしないため何もしない
-        }else{
-            sendScore += scoreNum;
-            if(soundPool != null){
-                int playSound = 0;
-                int playSound2 = 0;
-                playSound = sounds[soundNum];
-                playSound2 = sounds[soundNum2];
-                if(playSound != 0 && playSound2 != 0){
-                    soundPool.play(playSound,1.0f,1.0f,0,0,1);
-                    soundPool.play(playSound2,1.0f,1.0f,0,0,1);
-                }
+        if(scoreNum > 0 && nowScore + scoreNum > 0) {
+            nowScore += scoreNum;
+        }
+        playSound(soundNum);
+        playSound(soundNum2);
+    }
+
+    public void playSound(int soundNum){
+        if(soundPool != null){
+            int playSound = 0;
+            playSound = sounds[soundNum];
+            if(playSound != 0){
+                soundPool.play(playSound,1.0f,1.0f,0,0,1);
             }
         }
     }
 
-    public void scoreReset(){ sendScore = 0;}
+    public void scoreReset(){ nowScore = 0;}
 
     public int scoreCheck(){
-        //Log.d("ScoreAdmin","Score:" + sendScore);
-        return sendScore;
+        //Log.d("ScoreAdmin","Score:" + nowScore);
+        return nowScore;
     }
 
     //アタックひよこさんカウント

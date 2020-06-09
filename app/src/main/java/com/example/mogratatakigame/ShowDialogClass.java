@@ -10,7 +10,6 @@ import androidx.fragment.app.DialogFragment;
 public class ShowDialogClass extends DialogFragment {
 
     public String dialogMsg = "ハイスコアをリセットしてよろしいでしょうか";
-    private MogNumAdmin mogNumAdmin = new MogNumAdmin();
 
     @Override
     public Dialog onCreateDialog(Bundle bundle){
@@ -21,12 +20,16 @@ public class ShowDialogClass extends DialogFragment {
             public void onClick(DialogInterface dialog, int which) {
                         //はいをタップした時の動作
                         MainActivity mainActivity = (MainActivity)getActivity();
+                        mainActivity.playClickSound();
                         mainActivity.resetHighScore();
             }
         });
         builder.setNegativeButton("いいえ", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                //いいえをタップした時の動作
+                MainActivity mainActivity = (MainActivity)getActivity();
+                mainActivity.playClickSound();
                 dismiss();
             }
         });
