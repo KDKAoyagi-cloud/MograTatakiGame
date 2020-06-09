@@ -1437,7 +1437,7 @@ public class MainActivity extends AppCompatActivity {
             resetUpDn();
         }
         mogNumAdmin.playSound(11);
-        mogNumAdmin.stage = 3;
+//        mogNumAdmin.stage = 3;
         nowStageInt.setText(String.valueOf(mogNumAdmin.stage));
         nowStage = mogNumAdmin.stage;
         startSystemTime = System.currentTimeMillis();
